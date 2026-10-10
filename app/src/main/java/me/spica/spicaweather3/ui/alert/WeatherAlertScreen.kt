@@ -27,10 +27,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import dev.chrisbanes.haze.HazeInput
 import dev.chrisbanes.haze.HazeProgressive
-import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.blur.hazeBlur
+import dev.chrisbanes.haze.blur.materials.HazeMaterials
 import dev.chrisbanes.haze.hazeSource
-import dev.chrisbanes.haze.materials.HazeMaterials
 import dev.chrisbanes.haze.rememberHazeState
 import me.spica.spicaweather3.R
 import me.spica.spicaweather3.domain.model.WeatherAlert
@@ -77,12 +78,12 @@ fun WeatherAlertScreen(cityId: String) {
   Scaffold(
     topBar = {
       MainTopBar(
-        modifier = Modifier.hazeEffect(
-          state = hazeState,
-          style = HazeMaterials.ultraThin(MiuixTheme.colorScheme.surface)
-        ) {
-          progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f)
-        },
+        modifier = Modifier.hazeBlur(
+          input = HazeInput.Sources(hazeState),
+          style = HazeMaterials.ultraThin(MiuixTheme.colorScheme.surface).then {
+            progressive(HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f))
+          }
+        ),
         scrollBehavior = scrollBehavior,
         title = {
           Text(

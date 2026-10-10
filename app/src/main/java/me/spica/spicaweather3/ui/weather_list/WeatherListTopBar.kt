@@ -17,10 +17,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dev.chrisbanes.haze.HazeInput
 import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeEffect
-import dev.chrisbanes.haze.materials.HazeMaterials
+import dev.chrisbanes.haze.blur.hazeBlur
+import dev.chrisbanes.haze.blur.materials.HazeMaterials
 import me.spica.spicaweather3.R
 import me.spica.spicaweather3.ui.widget.MainTopBar
 import me.spica.spicaweather3.utils.navSharedBounds
@@ -49,12 +50,12 @@ fun WeatherListTopBar(
   onSearchClick: () -> Unit
 ) {
   MainTopBar(
-    modifier = Modifier.hazeEffect(
-      state = hazeState,
-      style = HazeMaterials.ultraThin(MiuixTheme.colorScheme.surface)
-    ) {
-      progressive = HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f)
-    },
+    modifier = Modifier.hazeBlur(
+      input = HazeInput.Sources(hazeState),
+      style = HazeMaterials.ultraThin(MiuixTheme.colorScheme.surface).then {
+        progressive(HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f))
+      }
+    ),
     scrollBehavior = scrollBehavior,
     title = {
       Text(

@@ -30,23 +30,17 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.kyant.backdrop.backdrops.LayerBackdrop
-import com.kyant.backdrop.backdrops.layerBackdrop
-import com.kyant.backdrop.backdrops.rememberLayerBackdrop
-import com.kyant.backdrop.drawBackdrop
-import com.kyant.backdrop.drawPlainBackdrop
-import com.kyant.backdrop.effects.blur
-import com.kyant.backdrop.effects.colorControls
-import com.kyant.backdrop.effects.lens
-import com.kyant.backdrop.effects.opacity
-import com.kyant.backdrop.effects.vibrancy
-import com.kyant.backdrop.highlight.Highlight
+import dev.chrisbanes.haze.ExperimentalHazeApi
+import dev.chrisbanes.haze.HazeInput
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.glass.GlassStyle
+import dev.chrisbanes.haze.glass.hazeGlass
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 import me.spica.spicaweather3.R
 import me.spica.spicaweather3.common.type.WeatherAnimType
 import me.spica.spicaweather3.core.constants.MainScreenConstants
@@ -56,7 +50,6 @@ import me.spica.spicaweather3.presentation.theme.MAIN_PLUS_BUTTON_SIZE
 import me.spica.spicaweather3.ui.LocalSharedTransitionScope
 import me.spica.spicaweather3.ui.main.weather.WeatherPage
 import me.spica.spicaweather3.ui.main.weather.WeatherPageState
-import me.spica.spicaweather3.ui.widget.BackdropEffects.standardGlassEffect
 import me.spica.spicaweather3.ui.widget.MainTopBar
 import me.spica.spicaweather3.ui.widget.ShowOnIdleContent
 import me.spica.spicaweather3.ui.widget.materialSharedAxisXIn
@@ -77,7 +70,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
  * 主屏幕 - 展示天气信息的主要界面
  * 支持多城市横向滑动浏览，共享元素转场动画
  */
-@OptIn(ExperimentalSharedTransitionApi::class)
+@OptIn(ExperimentalSharedTransitionApi::class, ExperimentalHazeApi::class)
 @Composable
 fun MainScreen() {
     // ==================== 状态管理 ====================
@@ -136,7 +129,15 @@ fun MainScreen() {
     val navigator = LocalNavController.current
 
     // 毛玻璃效果状态
-    val backdrop = rememberLayerBackdrop()
+    val hazeState = rememberHazeState()
+    val topBarGlassStyle = remember {
+        GlassStyle.regular.then {
+            shape(RoundedCornerShape(0.dp))
+            optics(blurRadius = 8.dp, refractionDisplacement = 10.dp)
+            chromaMultiplier(1.6f)
+            chromaticAberrationStrength(0.1f)
+        }
+    }
 
     val refreshTexts = listOf(
         stringResource(R.string.refresh_pull_down),
@@ -153,7 +154,7 @@ fun MainScreen() {
             // 浮动添加按钮 - 跳转到城市列表
             floatingActionButton = {
                 AddCityButton(
-                    backdrop = backdrop,
+                    hazeState = hazeState,
                     onClick = { navigator.add(Routes.WeatherList) }
                 )
             },
@@ -161,19 +162,9 @@ fun MainScreen() {
             topBar = {
                 MainTopBar(
                     modifier = Modifier
-                        .drawPlainBackdrop(
-                            backdrop = backdrop,
-                            shape = {
-                                RoundedCornerShape(0.dp)
-                                    },
-                            effects = {
-                                standardGlassEffect()
-                                lens(
-                                    5f.dp.toPx(),
-                                    10f.dp.toPx(),
-                                    chromaticAberration = true
-                                )
-                            },
+                        .hazeGlass(
+                            input = HazeInput.Sources(hazeState),
+                            style = topBarGlassStyle
                         )
                         .fillMaxWidth(),
                     scrollBehavior = scrollBehavior,
@@ -204,7 +195,7 @@ fun MainScreen() {
             // 主内容区域
             Box(
                 modifier = Modifier
-                    .layerBackdrop(backdrop) // 毛玻璃效果源
+                    .hazeSource(hazeState) // 毛玻璃效果源
                     .fillMaxSize()
             ) {
                 // 下拉刷新容器
@@ -232,36 +223,31 @@ fun MainScreen() {
 /**
  * 添加城市按钮组件
  */
+@OptIn(ExperimentalHazeApi::class)
 @Composable
 private fun AddCityButton(
-    backdrop: LayerBackdrop,
+    hazeState: HazeState,
     onClick: () -> Unit
 ) {
     with(LocalSharedTransitionScope.current) {
         val glassColor = MiuixTheme.colorScheme.onSurface.copy(alpha = .1f)
+        val glassStyle = remember(glassColor) {
+            GlassStyle.regular.then {
+                shape(CircleShape)
+                tint(glassColor)
+                optics(blurRadius = 8.dp, refractionDisplacement = 22.dp)
+                chromaMultiplier(1.6f)
+                chromaticAberrationStrength(0.1f)
+            }
+        }
         Box(
             modifier = Modifier
                 .size(MAIN_PLUS_BUTTON_SIZE)
                 .noRippleClickable(onClick = onClick)
                 .clip(CircleShape)
-                .drawBackdrop(
-                    highlight = { Highlight.Plain },
-                    backdrop = backdrop,
-                    shape = { CircleShape },
-                    onDrawSurface = {
-                        drawCircle(
-                            color = glassColor,
-                            radius = size.minDimension / 2f
-                        )
-                    },
-                    effects = {
-                        standardGlassEffect()
-                        lens(
-                            12f.dp.toPx(),
-                            22f.dp.toPx(),
-                            chromaticAberration = true
-                        )
-                    }
+                .hazeGlass(
+                    input = HazeInput.Sources(hazeState),
+                    style = glassStyle
                 ),
             contentAlignment = Alignment.Center
         ) {

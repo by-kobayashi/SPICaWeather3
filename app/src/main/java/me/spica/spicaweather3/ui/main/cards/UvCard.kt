@@ -26,17 +26,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.kyant.backdrop.backdrops.layerBackdrop
-import com.kyant.backdrop.backdrops.rememberLayerBackdrop
-import com.kyant.backdrop.drawPlainBackdrop
-import com.kyant.backdrop.effects.lens
+import dev.chrisbanes.haze.ExperimentalHazeApi
+import dev.chrisbanes.haze.HazeInput
+import dev.chrisbanes.haze.glass.GlassStyle
+import dev.chrisbanes.haze.glass.hazeGlass
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 import me.spica.spicaweather3.R
 import me.spica.spicaweather3.presentation.theme.WIDGET_CARD_PADDING
 import me.spica.spicaweather3.presentation.theme.WIDGET_CARD_TITLE_TEXT_STYLE
@@ -44,15 +45,28 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 
+@OptIn(ExperimentalHazeApi::class)
 @Composable
 fun UVCard(uv: Int, startAnim: Boolean) {
-  val backdrop = rememberLayerBackdrop()
+  val hazeState = rememberHazeState()
   val uvDescriptionRes = remember(uv) { uv.toUvLevelRes() }
   val uvDescription = stringResource(id = uvDescriptionRes)
   val uvTipRes = remember(uv) { uv.toUvTipRes() }
   val uvExtraDesc = stringResource(id = uvTipRes)
 
   val glassColor = MiuixTheme.colorScheme.onSurface.copy(alpha = .04f)
+  val glassStyle = remember(glassColor) {
+    GlassStyle.clear.then {
+      shape(CircleShape)
+      tint(glassColor)
+      optics(
+        blurRadius = 0.dp,
+        refractionDisplacement = 10.dp,
+        refractionDetailIntensity = 0f
+      )
+      chromaticAberrationStrength(0.1f)
+    }
+  }
 
   val progressAnimValue = animateFloatAsState(
     if (startAnim) 1f else 0f
@@ -124,7 +138,7 @@ fun UVCard(uv: Int, startAnim: Boolean) {
           .graphicsLayer {
             translationY = -5.5.dp.toPx() - 4.dp.toPx()
           }
-          .layerBackdrop(backdrop)
+          .hazeSource(hazeState)
           .background(
             brush = Brush.horizontalGradient(
               colors = listOf(
@@ -165,27 +179,9 @@ fun UVCard(uv: Int, startAnim: Boolean) {
         Box(
           modifier = Modifier
             .fillMaxSize()
-            .drawPlainBackdrop(
-              backdrop = backdrop,
-              shape = { CircleShape },
-              onDrawFront = {
-                drawRect(
-                  color = glassColor,
-                  size = this.size
-                )
-              },
-              onDrawBackdrop = { draw ->
-                scale(1.5f, 1.5f) {
-                  draw()
-                }
-              },
-              effects = {
-                lens(
-                  5f.dp.toPx(),
-                  10f.dp.toPx(),
-                  chromaticAberration = true
-                )
-              }
+            .hazeGlass(
+              input = HazeInput.Sources(hazeState),
+              style = glassStyle
             )
         )
       }

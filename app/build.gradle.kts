@@ -145,14 +145,14 @@ dependencies {
     implementation(libs.miuix.ui)
     implementation(libs.miuix.preference)
 //  implementation(libs.miuix.android.icon)
-    implementation(libs.backdrop)
-    implementation(libs.capsule)
-    implementation(libs.haze.materials)
+    implementation(libs.haze)
+    implementation(libs.haze.blur)
+    implementation(libs.haze.blur.materials)
+    implementation(libs.haze.glass)
     implementation(libs.accompanist.systemuicontroller)
     // define a BOM and its version
     implementation(platform(libs.okhttp.bom))
     // define any required OkHttp artifacts without version
-    implementation(libs.haze)
     implementation(libs.okhttp)
     implementation(libs.logging.interceptor)
     implementation(libs.retrofit)
