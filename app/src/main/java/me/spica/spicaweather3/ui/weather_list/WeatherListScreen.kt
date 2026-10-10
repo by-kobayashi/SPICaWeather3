@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+
 package me.spica.spicaweather3.ui.weather_list
 
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -6,6 +8,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -17,7 +22,6 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
@@ -29,9 +33,6 @@ import me.spica.spicaweather3.ui.main.weather.WeatherPageState
 import org.koin.compose.viewmodel.koinActivityViewModel
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.utils.overScrollVertical
 
 /**
  * 城市管理页面
@@ -43,7 +44,7 @@ import top.yukonga.miuix.kmp.utils.overScrollVertical
 @Composable
 fun WeatherListScreen() {
   val navController = LocalNavController.current
-  val scrollBehavior = MiuixScrollBehavior()
+  val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
   val viewModel = koinActivityViewModel<WeatherViewModel>()
   val hapticFeedback = LocalHapticFeedback.current
 
@@ -66,6 +67,7 @@ fun WeatherListScreen() {
 
   // ==================== UI 布局 ====================
   Scaffold(
+    containerColor = MaterialTheme.colorScheme.surface,
     topBar = {
       WeatherListTopBar(
         scrollBehavior = scrollBehavior,
@@ -112,10 +114,8 @@ fun WeatherListScreen() {
         .hazeSource(listHazeState)
         .fillMaxSize()
         .padding(paddingValues)
-        .nestedScroll(scrollBehavior.nestedScrollConnection)
-        .overScrollVertical(),
+        .nestedScroll(scrollBehavior.nestedScrollConnection),
       contentPadding = PaddingValues(top = 12.dp, bottom = 48.dp),
-      overscrollEffect = null
     ) {
       itemsIndexed(
         items = tempList,

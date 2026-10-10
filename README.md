@@ -6,7 +6,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Compose-2026.03.00-brightgreen" alt="Compose">
-  <img src="https://img.shields.io/badge/Kotlin-2.2.21-blue" alt="Kotlin">
+  <img src="https://img.shields.io/badge/Kotlin-2.4.21-blue" alt="Kotlin">
   <img src="https://img.shields.io/badge/minSdk-33-orange" alt="minSdk">
   <img src="https://img.shields.io/badge/License-MIT-yellow" alt="License">
 </p>
@@ -17,7 +17,7 @@
 - 🌈 **精美的天气动画** - 雨、雪、云、太阳等多种自定义天气动画效果
 - 🔄 **共享元素转场** - 流畅的页面切换动画体验
 - 🏗️ **现代化架构** - MVVM + Koin + Flow + Room 响应式架构
-- 🎭 **MIUI 风格设计** - 采用 MiuiX 组件库，提供原生般的体验
+- 🎭 **MIUI 风格设计** - 使用 Compose 原生组件与自定义主题，保留 MIUI 风格配色
 - 🌐 **实时天气数据** - 接入和风天气 API，提供准确的气象信息
 - 📍 **智能定位** - 百度定位服务，自动获取当前位置天气
 
@@ -38,7 +38,7 @@
 
 ### 核心框架
 - **Jetpack Compose** - 声明式 UI 工具包
-- **Kotlin 2.2.21** - 项目开发语言
+- **Kotlin 2.4.21** - 项目开发语言
 - **Material 3** - Material Design 3 组件
 
 ### 架构组件
@@ -57,7 +57,7 @@
 - **Gson** - JSON 序列化/反序列化
 
 ### UI 增强
-- **MiuiX** - MIUI 风格组件库
+- **Compose Material 3** - 原生 UI 组件与自定义主题
 - **AndroidLiquidGlass** - 毛玻璃模糊效果
 - **AndroidAutoSize** - 屏幕适配解决方案
 - **Accompanist** - Compose 辅助库（权限、系统 UI 控制器）
@@ -266,7 +266,7 @@ HEFENG_API_ID=your_api_id_here
 
 - [和风天气](https://www.qweather.com/) - 提供稳定可靠的天气数据服务（[如何配置 API Key](#2-配置-localproperties)）
 - [Jetpack Compose](https://developer.android.com/jetpack/compose) - Google 官方现代 UI 工具包
-- [MiuiX](https://github.com/miuix-kotlin-multiplatform/miuix) - MIUI 风格组件库
+- [Compose Material 3](https://developer.android.com/jetpack/androidx/releases/compose-material3) - 原生组件与自定义 MIUI 风格主题
 - 所有为本项目做出贡献的开发者
 
 ## 📮 联系方式

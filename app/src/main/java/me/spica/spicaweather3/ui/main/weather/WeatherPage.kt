@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+
 package me.spica.spicaweather3.ui.main.weather
 
 import androidx.compose.animation.AnimatedContent
@@ -11,6 +13,9 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.remember
@@ -28,9 +33,6 @@ import me.spica.spicaweather3.presentation.theme.WIDGET_CARD_CORNER_SHAPE
 import me.spica.spicaweather3.ui.main.WeatherViewModel
 import me.spica.spicaweather3.ui.widget.AnimateOnEnter
 import org.koin.compose.koinInject
-import top.yukonga.miuix.kmp.basic.ScrollBehavior
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 
 /**
@@ -48,7 +50,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 fun WeatherPage(
   weatherState: WeatherPageState,
   modifier: Modifier = Modifier,
-  scrollBehavior: ScrollBehavior,
+  scrollBehavior: TopAppBarScrollBehavior,
   paddingValues: PaddingValues
 ) {
   AnimatedContent(
@@ -84,7 +86,7 @@ fun WeatherPage(
 @Composable
 private fun DataPage(
   city: me.spica.spicaweather3.domain.model.City,
-  scrollBehavior: ScrollBehavior,
+  scrollBehavior: TopAppBarScrollBehavior,
   paddingValues: PaddingValues
 ) {
   val viewModel = koinInject<WeatherViewModel>()
@@ -186,7 +188,7 @@ private fun EmptyPage() {
   ) {
     Text(
       stringResource(R.string.empty_state_no_data),
-      style = MiuixTheme.textStyles.title2,
+      style = MaterialTheme.typography.headlineMedium,
       color = COLOR_WHITE_100
     )
   }
@@ -197,6 +199,6 @@ private fun EmptyPage() {
  */
 @Composable
 private fun Modifier.cardBackground() = this.background(
-  color = MiuixTheme.colorScheme.surfaceContainer,
+  color = MaterialTheme.colorScheme.surfaceContainer,
   shape = WIDGET_CARD_CORNER_SHAPE
 )

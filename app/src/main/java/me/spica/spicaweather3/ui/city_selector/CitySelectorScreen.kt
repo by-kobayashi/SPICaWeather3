@@ -6,7 +6,7 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +22,17 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -31,29 +42,22 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlin.random.Random
 import me.spica.spicaweather3.R
 import me.spica.spicaweather3.route.LocalNavController
 import me.spica.spicaweather3.ui.main.WeatherViewModel
 import me.spica.spicaweather3.utils.navSharedBounds
-import me.spica.spicaweather3.utils.noRippleClickable
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.viewmodel.koinActivityViewModel
-import top.yukonga.miuix.kmp.basic.HorizontalDivider
-import top.yukonga.miuix.kmp.basic.InputField
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.SearchBar
-import top.yukonga.miuix.kmp.basic.SmallTitle
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.utils.overScrollVertical
-import top.yukonga.miuix.kmp.utils.pressable
-import kotlin.random.Random
 
 
 @OptIn(ExperimentalSharedTransitionApi::class)
@@ -67,6 +71,7 @@ fun CitySelectorScreen() {
     val errorMessage = viewModel.errorMessage.collectAsStateWithLifecycle()
 
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
 
     LaunchedEffect(errorMessage.value) {
         if (errorMessage.value?.isNotEmpty() == false) {
@@ -78,30 +83,35 @@ fun CitySelectorScreen() {
         viewModel.searchCities(searchText)
     }
 
-    Scaffold {
+    Scaffold(containerColor = MaterialTheme.colorScheme.surface) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(it),
         ) {
             // 顶部搜索栏：与城市管理页共享转场，实现统一的搜索入口体验
-            SearchBar(
-                inputField = {
-                    InputField(
-                        label = stringResource(R.string.city_selector_input_hint),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .navSharedBounds("search_bar"),
-                        query = searchText,
-                        onQueryChange = { txt -> searchText = txt },
-                        onSearch = {},
-                        expanded = false,
-                        onExpandedChange = {},
-                    )
-                }, onExpandedChange = {}
-            ) {
-                TopCities()
-            }
+            TextField(
+                value = searchText,
+                onValueChange = { searchText = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .navSharedBounds("search_bar"),
+                placeholder = { Text(stringResource(R.string.city_selector_input_hint)) },
+                leadingIcon = {
+                    Icon(Icons.Default.Search, contentDescription = stringResource(R.string.cd_search))
+                },
+                singleLine = true,
+                shape = MaterialTheme.shapes.medium,
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                ),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
+            )
 
             // 根据输入内容动态切换展示热门城市或搜索结果
             AnimatedContent(
@@ -131,7 +141,6 @@ private fun ListSelector() {
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
-            .overScrollVertical()
             .padding(horizontal = 16.dp),
         contentPadding = PaddingValues(bottom = 48.dp, top = 20.dp)
     ) {
@@ -140,11 +149,7 @@ private fun ListSelector() {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .pressable(
-                        enabled = true,
-                        interactionSource = remember { MutableInteractionSource() },
-                    )
-                    .noRippleClickable {
+                    .clickable {
                         viewModel.saveLocation(item, onSucceed = {
                             weatherViewModel.refresh()
                             navController.removeLastOrNull()
@@ -155,9 +160,9 @@ private fun ListSelector() {
                     HorizontalDivider()
                 }
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(item.name, style = MiuixTheme.textStyles.subtitle)
+                Text(item.name, style = MaterialTheme.typography.labelMedium)
                 Spacer(modifier = Modifier.height(8.dp))
-                Text("${item.administrativeArea2}, ${item.administrativeArea1}", style = MiuixTheme.textStyles.body1)
+                Text("${item.administrativeArea2}, ${item.administrativeArea1}", style = MaterialTheme.typography.bodyLarge)
                 Spacer(modifier = Modifier.height(8.dp))
             }
         }
@@ -180,7 +185,11 @@ private fun TopCities(modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Spacer(modifier = Modifier.height(10.dp))
-        SmallTitle(stringResource(R.string.city_selector_hot_cities))
+        Text(
+            text = stringResource(R.string.city_selector_hot_cities),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         LazyVerticalGrid(
             modifier = Modifier
                 .fillMaxWidth()
@@ -219,12 +228,11 @@ private fun TopCities(modifier: Modifier = Modifier) {
                             scaleY = scale
                             alpha = progress
                         }
-                        .pressable(null)
                         .background(
-                            MiuixTheme.colorScheme.surfaceContainerHigh,
+                            MaterialTheme.colorScheme.surfaceContainerHigh,
                             RoundedCornerShape(8.dp)
                         )
-                        .noRippleClickable {
+                        .clickable {
                             viewModel.saveLocation(location = location, onSucceed = {
                                 weatherViewModel.refresh()
                                 navController.removeLastOrNull()

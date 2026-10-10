@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,8 +32,6 @@ import me.spica.spicaweather3.presentation.theme.COLOR_BLACK_100
 import me.spica.spicaweather3.presentation.theme.COLOR_BLACK_5
 import me.spica.spicaweather3.presentation.theme.WIDGET_CARD_PADDING
 import me.spica.spicaweather3.presentation.theme.WIDGET_CARD_TITLE_TEXT_STYLE
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /**
  * 空气质量卡片
@@ -76,11 +76,11 @@ fun AqiCard(airQualitySummary: AirQualityData?, startAnim: Boolean) {
       Icon(
         painter = painterResource(id = R.drawable.icon_aqi),
         contentDescription = null,
-        tint = MiuixTheme.colorScheme.onSurface
+        tint = MaterialTheme.colorScheme.onSurface
       )
       Text(
         text = stringResource(R.string.aqi_title),
-        color = MiuixTheme.colorScheme.onSurface,
+        color = MaterialTheme.colorScheme.onSurface,
         style = WIDGET_CARD_TITLE_TEXT_STYLE(),
         modifier = Modifier.graphicsLayer {
           alpha = textAnimValue1
@@ -184,8 +184,8 @@ fun AqiCard(airQualitySummary: AirQualityData?, startAnim: Boolean) {
             translationY = -12.dp.toPx() * (1f - textAnimValue3)
           },
         text = healthAdvice,
-        color = MiuixTheme.colorScheme.onSurfaceContainer.copy(alpha = .7f),
-        style = MiuixTheme.textStyles.body1,
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = .7f),
+        style = MaterialTheme.typography.bodyLarge,
       )
     }
   }

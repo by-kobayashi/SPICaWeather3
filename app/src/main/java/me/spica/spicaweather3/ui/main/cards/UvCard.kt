@@ -19,6 +19,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -41,8 +43,6 @@ import dev.chrisbanes.haze.rememberHazeState
 import me.spica.spicaweather3.R
 import me.spica.spicaweather3.presentation.theme.WIDGET_CARD_PADDING
 import me.spica.spicaweather3.presentation.theme.WIDGET_CARD_TITLE_TEXT_STYLE
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 
 @OptIn(ExperimentalHazeApi::class)
@@ -54,7 +54,7 @@ fun UVCard(uv: Int, startAnim: Boolean) {
   val uvTipRes = remember(uv) { uv.toUvTipRes() }
   val uvExtraDesc = stringResource(id = uvTipRes)
 
-  val glassColor = MiuixTheme.colorScheme.onSurface.copy(alpha = .04f)
+  val glassColor = MaterialTheme.colorScheme.onSurface.copy(alpha = .04f)
   val glassStyle = remember(glassColor) {
     GlassStyle.clear.then {
       shape(CircleShape)
@@ -100,11 +100,11 @@ fun UVCard(uv: Int, startAnim: Boolean) {
       Icon(
         painter = painterResource(id = R.drawable.material_symbols_outlined_background_blur_light),
         contentDescription = null,
-        tint = MiuixTheme.colorScheme.onSurface
+        tint = MaterialTheme.colorScheme.onSurface
       )
       Text(
         text = stringResource(R.string.uv_info_title),
-        color = MiuixTheme.colorScheme.onSurface, style = WIDGET_CARD_TITLE_TEXT_STYLE(),
+        color = MaterialTheme.colorScheme.onSurface, style = WIDGET_CARD_TITLE_TEXT_STYLE(),
         modifier = Modifier.graphicsLayer {
           alpha = textAnimValue1
           translationY = -12.dp.toPx() * (1f - textAnimValue1)
@@ -114,8 +114,8 @@ fun UVCard(uv: Int, startAnim: Boolean) {
 
     Text(
       text = uvDescription,
-      color = MiuixTheme.colorScheme.onSurface,
-      style = MiuixTheme.textStyles.main.copy(fontWeight = FontWeight.ExtraBold),
+      color = MaterialTheme.colorScheme.onSurface,
+      style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.ExtraBold),
       modifier = Modifier.graphicsLayer {
         alpha = textAnimValue2
         translationY = -12.dp.toPx() * (1f - textAnimValue2)
@@ -171,7 +171,7 @@ fun UVCard(uv: Int, startAnim: Boolean) {
           .clip(CircleShape)
           .border(
             width = 1.dp,
-            color = MiuixTheme.colorScheme.onSurface.copy(alpha = .1f),
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = .1f),
             shape = CircleShape
           ),
         contentAlignment = Alignment.Center
@@ -200,10 +200,10 @@ fun UVCard(uv: Int, startAnim: Boolean) {
               alpha = textAnimValue3
               translationY = -12.dp.toPx() * (1f - textAnimValue3)
             },
-          text = uvExtraDesc, color = MiuixTheme.colorScheme.onSurface,
+          text = uvExtraDesc, color = MaterialTheme.colorScheme.onSurface,
           style = WIDGET_CARD_TITLE_TEXT_STYLE().copy(
             fontWeight = FontWeight.W500, fontSize = 14.sp,
-            color = MiuixTheme.colorScheme.onSurface.copy(alpha = .6f)
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = .6f)
           )
         )
       }
@@ -211,7 +211,7 @@ fun UVCard(uv: Int, startAnim: Boolean) {
       Icon(
         modifier = Modifier.size(30.dp),
         painter = painterResource(R.drawable.material_symbols_outlined_sports_tennis),
-        tint = MiuixTheme.colorScheme.onSurface,
+        tint = MaterialTheme.colorScheme.onSurface,
         contentDescription = null
       )
     }

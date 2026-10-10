@@ -2,9 +2,13 @@ package me.spica.spicaweather3.ui.landscape
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableIntStateOf
@@ -14,8 +18,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import me.spica.spicaweather3.ui.main.WeatherViewModel
 import org.koin.compose.viewmodel.koinActivityViewModel
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /**
  * 横屏主布局 - 左右双栏结构
@@ -31,12 +33,16 @@ fun LandscapeMainScreen() {
   val selectedCityIndex = rememberSaveable { mutableIntStateOf(0) }
 
   Scaffold(
+    containerColor = MaterialTheme.colorScheme.surface,
     modifier = Modifier
       .fillMaxSize()
-      .background(MiuixTheme.colorScheme.surface)
-  ) {
+      .background(MaterialTheme.colorScheme.surface)
+  ) { paddingValues ->
     Row(
-      modifier = Modifier.fillMaxSize()
+      modifier = Modifier
+        .fillMaxSize()
+        .padding(paddingValues)
+        .consumeWindowInsets(paddingValues)
     ) {
       // 左栏 - 城市列表 (固定宽度 280dp)
       CityListPane(
@@ -52,7 +58,7 @@ fun LandscapeMainScreen() {
 
       // 分隔线
       VerticalDivider(
-        color = MiuixTheme.colorScheme.outline.copy(alpha = 0.3f)
+        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
       )
 
       // 右栏 - 内容区（卡片/详情）

@@ -22,6 +22,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -42,6 +46,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlin.random.Random
 import me.spica.spicaweather3.R
 import me.spica.spicaweather3.common.type.WeatherAnimType
 import me.spica.spicaweather3.ui.LocalSharedTransitionScope
@@ -49,11 +54,6 @@ import me.spica.spicaweather3.ui.main.weather.WeatherPageState
 import me.spica.spicaweather3.ui.widget.particle.ThanosDisintegrateContainer
 import me.spica.spicaweather3.utils.noRippleClickable
 import sh.calvin.reorderable.ReorderableCollectionItemScope
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.InfiniteProgressIndicator
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import kotlin.random.Random
 
 /**
  * 天气列表项组件
@@ -194,7 +194,7 @@ fun ReorderableCollectionItemScope.WeatherListItem(
 private fun WeatherItemContent(
     modifier: Modifier = Modifier,
     cityData: WeatherPageState,
-    initColor: Color = MiuixTheme.colorScheme.onSurface
+    initColor: Color = MaterialTheme.colorScheme.onSurface
 ) {
     // 卡片背景色，会根据天气类型动画变化
     val cardColor = remember { androidx.compose.animation.Animatable(initColor) }
@@ -232,7 +232,7 @@ private fun WeatherItemContent(
                     city.name,
                     color = Color.White,
                     textAlign = TextAlign.Start,
-                    style = MiuixTheme.textStyles.title2,
+                    style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 22.sp
                 )
@@ -250,7 +250,7 @@ private fun WeatherItemContent(
                 "${city.administrativeArea1},${city.administrativeArea2}",
                 color = Color.White,
                 textAlign = TextAlign.Start,
-                style = MiuixTheme.textStyles.body2,
+                style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Normal,
                 fontSize = 16.sp
             )
@@ -288,7 +288,7 @@ private fun WeatherItemContent(
                                 }
                             },
                             color = Color.White,
-                            style = MiuixTheme.textStyles.main.copy(fontSize = 32.sp),
+                            style = MaterialTheme.typography.labelLarge.copy(fontSize = 32.sp),
                             fontWeight = FontWeight.Light,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxHeight()
@@ -296,7 +296,7 @@ private fun WeatherItemContent(
                     }
 
                     else -> {
-                        InfiniteProgressIndicator(
+                        CircularProgressIndicator(
                             color = Color.White,
                             modifier = Modifier.size(40.dp)
                         )

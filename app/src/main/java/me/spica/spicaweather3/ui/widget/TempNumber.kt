@@ -2,6 +2,8 @@ package me.spica.spicaweather3.ui.widget
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.layout.Row
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -10,8 +12,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 
 @Composable
@@ -30,7 +30,7 @@ fun TempNumber(modifier: Modifier = Modifier, temp: Int, unit: String) {
     Text(
       "${tempNumberAnim.value.toInt()}",
       modifier = Modifier.alignByBaseline(),
-      style = MiuixTheme.textStyles.title1
+      style = MaterialTheme.typography.headlineLarge
         .copy(
           fontSize = 100.sp, fontWeight = FontWeight.Bold,
           color = Color.White.copy(alpha = 0.8f),
@@ -39,7 +39,7 @@ fun TempNumber(modifier: Modifier = Modifier, temp: Int, unit: String) {
     Text(
       unit,
       modifier = Modifier.alignByBaseline(),
-      style = MiuixTheme.textStyles.title1
+      style = MaterialTheme.typography.headlineLarge
         .copy(
           fontSize = 50.sp, fontWeight = FontWeight.Bold,
           color = Color.White.copy(alpha = 0.8f),

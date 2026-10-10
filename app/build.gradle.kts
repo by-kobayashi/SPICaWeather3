@@ -83,7 +83,6 @@ android {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_11)
             freeCompilerArgs.addAll(
-                "-XXLanguage:+PropertyParamAnnotationDefaultTargetMode",
                 "-opt-in=kotlin.RequiresOptIn"
             )
         }
@@ -115,6 +114,8 @@ android {
 dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.aar"))))
     implementation(project(":jbox2d"))
+    implementation(platform(libs.kotlin.bom))
+    implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -142,9 +143,6 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.dynamicanimation.ktx)
     val version = "0.9.0"
-    implementation(libs.miuix.ui)
-    implementation(libs.miuix.preference)
-//  implementation(libs.miuix.android.icon)
     implementation(libs.haze)
     implementation(libs.haze.blur)
     implementation(libs.haze.blur.materials)

@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,8 +25,6 @@ import androidx.compose.ui.unit.sp
 import me.spica.spicaweather3.R
 import me.spica.spicaweather3.presentation.theme.WIDGET_CARD_PADDING
 import me.spica.spicaweather3.presentation.theme.WIDGET_CARD_TITLE_TEXT_STYLE
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 
 @Composable
@@ -67,7 +67,7 @@ fun PrecipitationCard(
       Icon(
         painter = painterResource(id = R.drawable.material_symbols_outlined_rainy_light),
         contentDescription = null,
-        tint = MiuixTheme.colorScheme.onSurface,
+        tint = MaterialTheme.colorScheme.onSurface,
         modifier = Modifier.graphicsLayer {
           scaleX = textAnimValue1
           scaleY = textAnimValue1
@@ -76,7 +76,7 @@ fun PrecipitationCard(
       )
       Text(
         text = stringResource(R.string.precipitation_info_title),
-        color = MiuixTheme.colorScheme.onSurface, style = WIDGET_CARD_TITLE_TEXT_STYLE(),
+        color = MaterialTheme.colorScheme.onSurface, style = WIDGET_CARD_TITLE_TEXT_STYLE(),
         modifier = Modifier.graphicsLayer {
           alpha = textAnimValue2
           translationY = -12.dp.toPx() * (1f - textAnimValue1)
@@ -97,8 +97,8 @@ fun PrecipitationCard(
             alpha = textAnimValue1
           },
           text = "${(precipitation * progressAnimValue).toInt()}",
-          color = MiuixTheme.colorScheme.onSurface,
-          style = MiuixTheme.textStyles.headline1.copy(
+          color = MaterialTheme.colorScheme.onSurface,
+          style = MaterialTheme.typography.titleMedium.copy(
             fontWeight = FontWeight.W900, fontSize = 56.sp
           )
         )
@@ -108,8 +108,8 @@ fun PrecipitationCard(
             translationY = -12.dp.toPx() * (1f - textAnimValue2)
           },
           text = "mm",
-          color = MiuixTheme.colorScheme.onSurface,
-          style = MiuixTheme.textStyles.headline2.copy(
+          color = MaterialTheme.colorScheme.onSurface,
+          style = MaterialTheme.typography.titleSmall.copy(
             fontWeight = FontWeight.W900, fontSize = 22.sp
           )
         )
@@ -126,10 +126,10 @@ fun PrecipitationCard(
             alpha = textAnimValue3
             translationY = -12.dp.toPx() * (1f - textAnimValue3)
           },
-          text = stringResource(R.string.precipitation_probability_label), color = MiuixTheme.colorScheme.onSurface,
+          text = stringResource(R.string.precipitation_probability_label), color = MaterialTheme.colorScheme.onSurface,
           style = WIDGET_CARD_TITLE_TEXT_STYLE().copy(
             fontWeight = FontWeight.W500, fontSize = 14.sp,
-            color = MiuixTheme.colorScheme.onSurface.copy(alpha = .9f)
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = .9f)
           )
         )
         Text(
@@ -137,11 +137,11 @@ fun PrecipitationCard(
             alpha = textAnimValue3
             translationY = -12.dp.toPx() * (1f - textAnimValue3)
           },
-          text = "${pop}%", color = MiuixTheme.colorScheme.onSurface,
-          style = MiuixTheme.textStyles.body1.copy(
+          text = "${pop}%", color = MaterialTheme.colorScheme.onSurface,
+          style = MaterialTheme.typography.bodyLarge.copy(
             fontWeight = FontWeight.W500,
             fontSize = 14.sp,
-            color = MiuixTheme.colorScheme.onSurface.copy(alpha = .9f)
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = .9f)
           )
         )
       }
@@ -153,7 +153,7 @@ fun PrecipitationCard(
           scaleY = textAnimValue4
         },
         painter = painterResource(R.drawable.material_symbols_outlined_smart_outlet),
-        tint = MiuixTheme.colorScheme.onSurface,
+        tint = MaterialTheme.colorScheme.onSurface,
         contentDescription = null
       )
     }

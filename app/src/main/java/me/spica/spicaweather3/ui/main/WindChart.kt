@@ -15,6 +15,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -25,7 +26,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 
 private val ITEM_WIDTH = 80.dp
@@ -36,9 +36,9 @@ private val LINE_HEIGHT = 80.dp
 @Composable
 fun WindChart(modifier: Modifier = Modifier, data: List<ItemWindData>) {
 
-  val lineColor1 = MiuixTheme.colorScheme.secondaryContainer
+  val lineColor1 = MaterialTheme.colorScheme.secondaryContainer
 
-  val lineColor2 = MiuixTheme.colorScheme.primary
+  val lineColor2 = MaterialTheme.colorScheme.primary
 
   Box(
     modifier = modifier
@@ -56,13 +56,13 @@ fun WindChart(modifier: Modifier = Modifier, data: List<ItemWindData>) {
         ) {
           Text(
             text = item.date,
-            style = MiuixTheme.textStyles.footnote1,
-            color = MiuixTheme.colorScheme.onSurface
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface
           )
           Icon(
             Icons.AutoMirrored.Default.ArrowBack,
             contentDescription = null,
-            tint = MiuixTheme.colorScheme.onSurfaceContainer,
+            tint = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.rotate(
               item.wind360 * 1f + 45f + 180f
             )
@@ -104,8 +104,8 @@ fun WindChart(modifier: Modifier = Modifier, data: List<ItemWindData>) {
 
           Text(
             text = "${item.windSpeed}km/h",
-            style = MiuixTheme.textStyles.footnote1,
-            color = MiuixTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.W500
           )
         }

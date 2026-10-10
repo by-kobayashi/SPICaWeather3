@@ -1,12 +1,12 @@
 package me.spica.spicaweather3.ui.landscape
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -19,8 +19,6 @@ import kotlinx.serialization.Serializable
 import me.spica.spicaweather3.ui.main.weather.WeatherPageState
 import me.spica.spicaweather3.ui.widget.materialSharedAxisZIn
 import me.spica.spicaweather3.ui.widget.materialSharedAxisZOut
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Serializable
 private sealed interface PaneRoute : NavKey {
@@ -47,7 +45,7 @@ fun WeatherContentPane(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(MiuixTheme.colorScheme.surface)
+            .background(MaterialTheme.colorScheme.surface)
     ) {
         if (cityState == null) {
             Box(
@@ -56,7 +54,7 @@ fun WeatherContentPane(
             ) {
                 Text(
                     text = "暂无城市数据",
-                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         } else {

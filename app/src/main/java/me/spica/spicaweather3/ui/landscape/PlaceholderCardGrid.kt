@@ -21,6 +21,10 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -30,10 +34,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import me.spica.spicaweather3.ui.main.weather.WeatherPageState
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /**
  * 占位卡片类型定义
@@ -77,7 +77,7 @@ fun PlaceholderCardGrid(
             text = cityState.city.name,
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
-            color = MiuixTheme.colorScheme.onSurface,
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
         )
         
@@ -86,7 +86,7 @@ fun PlaceholderCardGrid(
             Text(
                 text = "${today.temperature}°",
                 fontSize = 16.sp,
-                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp)
             )
         }
@@ -128,7 +128,7 @@ private fun PlaceholderCard(
             .fillMaxWidth()
             .height(if (cardInfo.spanCount > 1) 160.dp else 120.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(MiuixTheme.colorScheme.surfaceContainer)
+            .background(MaterialTheme.colorScheme.surfaceContainer)
             .clickable(onClick = onClick)
             .padding(16.dp)
     ) {
@@ -140,13 +140,13 @@ private fun PlaceholderCard(
                 text = cardInfo.title,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = MiuixTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface
             )
             
             Text(
                 text = cardInfo.description,
                 fontSize = 14.sp,
-                color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             
             // 占位指示
@@ -155,7 +155,7 @@ private fun PlaceholderCard(
                     .fillMaxWidth()
                     .height(4.dp)
                     .clip(RoundedCornerShape(2.dp))
-                    .background(MiuixTheme.colorScheme.outline.copy(alpha = 0.2f))
+                    .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
             )
         }
     }
@@ -177,7 +177,7 @@ fun CardDetailPlaceholder(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MiuixTheme.colorScheme.surface)
+            .background(MaterialTheme.colorScheme.surface)
     ) {
         // 顶部栏
         Row(
@@ -190,7 +190,7 @@ fun CardDetailPlaceholder(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "返回",
-                    tint = MiuixTheme.colorScheme.onSurface
+                    tint = MaterialTheme.colorScheme.onSurface
                 )
             }
             
@@ -200,7 +200,7 @@ fun CardDetailPlaceholder(
                 text = cardInfo?.title ?: cardType,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = MiuixTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
         
@@ -220,14 +220,14 @@ fun CardDetailPlaceholder(
                     modifier = Modifier
                         .size(120.dp)
                         .clip(RoundedCornerShape(24.dp))
-                        .background(MiuixTheme.colorScheme.surfaceContainer),
+                        .background(MaterialTheme.colorScheme.surfaceContainer),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = cardType.uppercase(),
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MiuixTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
                 
@@ -235,19 +235,19 @@ fun CardDetailPlaceholder(
                     text = "${cardInfo?.title ?: cardType} 详情",
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MiuixTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 
                 Text(
                     text = "城市: ${cityState.city.name}",
                     fontSize = 16.sp,
-                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 
                 Text(
                     text = "此处为详情内容占位\n后续将显示完整的${cardInfo?.title ?: cardType}信息",
                     fontSize = 14.sp,
-                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 24.dp)
                 )
             }

@@ -15,6 +15,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -32,8 +34,6 @@ import me.spica.spicaweather3.R
 import me.spica.spicaweather3.domain.model.WeatherData
 import me.spica.spicaweather3.presentation.theme.WIDGET_CARD_PADDING
 import me.spica.spicaweather3.presentation.theme.WIDGET_CARD_TITLE_TEXT_STYLE
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /**
  * 风力卡片
@@ -101,11 +101,11 @@ fun WindCard(weatherEntity: WeatherData, startAnim: Boolean) {
           },
         painter = painterResource(id = R.drawable.material_symbols_outlined_stream),
         contentDescription = null,
-        tint = MiuixTheme.colorScheme.onSurface
+        tint = MaterialTheme.colorScheme.onSurface
       )
       Text(
         text = stringResource(R.string.hourly_tab_wind),
-        color = MiuixTheme.colorScheme.onSurface,
+        color = MaterialTheme.colorScheme.onSurface,
         style = WIDGET_CARD_TITLE_TEXT_STYLE(),
         modifier = Modifier.graphicsLayer {
           alpha = textAnimValue1
@@ -132,8 +132,8 @@ fun WindCard(weatherEntity: WeatherData, startAnim: Boolean) {
           .background(
             brush = Brush.radialGradient(
               colors = listOf(
-                MiuixTheme.colorScheme.primary.copy(alpha = 0.2f),
-                MiuixTheme.colorScheme.primary.copy(alpha = 0.05f),
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.05f),
                 Color.Transparent
               )
             ),
@@ -144,7 +144,7 @@ fun WindCard(weatherEntity: WeatherData, startAnim: Boolean) {
         Icon(
           Icons.AutoMirrored.Default.ArrowBack,
           contentDescription = null,
-          tint = MiuixTheme.colorScheme.primary,
+          tint = MaterialTheme.colorScheme.primary,
           modifier = Modifier
             .size(40.dp)
             .graphicsLayer {
@@ -160,8 +160,8 @@ fun WindCard(weatherEntity: WeatherData, startAnim: Boolean) {
       ) {
         Text(
           text = currentWindDir,
-          color = MiuixTheme.colorScheme.onSurface,
-          style = MiuixTheme.textStyles.main.copy(fontWeight = FontWeight.Bold)
+          color = MaterialTheme.colorScheme.onSurface,
+          style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
         )
 
         Row(
@@ -171,14 +171,14 @@ fun WindCard(weatherEntity: WeatherData, startAnim: Boolean) {
           Text(
             modifier = Modifier.alignByBaseline(),
             text = "${todayWeather.windSpeed}",
-            color = MiuixTheme.colorScheme.primary,
-            style = MiuixTheme.textStyles.title1.copy(fontWeight = FontWeight.ExtraBold)
+            color = MaterialTheme.colorScheme.primary,
+            style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.ExtraBold)
           )
           Text(
             modifier = Modifier.alignByBaseline(),
             text = "km/h",
-            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-            style = MiuixTheme.textStyles.footnote1
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodySmall
           )
         }
       }
@@ -197,8 +197,8 @@ fun WindCard(weatherEntity: WeatherData, startAnim: Boolean) {
       Text(
         modifier = Modifier.fillMaxWidth(),
         text = getWindLevelDescription(todayWeather.windSpeed),
-        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-        style = MiuixTheme.textStyles.body2,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        style = MaterialTheme.typography.bodyMedium,
         textAlign = TextAlign.Start
       )
     }

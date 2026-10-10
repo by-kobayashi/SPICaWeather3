@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+
 package me.spica.spicaweather3.ui.main
 
 import androidx.compose.animation.AnimatedContent
@@ -21,6 +23,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -44,9 +55,9 @@ import dev.chrisbanes.haze.rememberHazeState
 import me.spica.spicaweather3.R
 import me.spica.spicaweather3.common.type.WeatherAnimType
 import me.spica.spicaweather3.core.constants.MainScreenConstants
+import me.spica.spicaweather3.presentation.theme.MAIN_PLUS_BUTTON_SIZE
 import me.spica.spicaweather3.route.LocalNavController
 import me.spica.spicaweather3.route.Routes
-import me.spica.spicaweather3.presentation.theme.MAIN_PLUS_BUTTON_SIZE
 import me.spica.spicaweather3.ui.LocalSharedTransitionScope
 import me.spica.spicaweather3.ui.main.weather.WeatherPage
 import me.spica.spicaweather3.ui.main.weather.WeatherPageState
@@ -58,13 +69,6 @@ import me.spica.spicaweather3.ui.widget.materialSharedAxisZIn
 import me.spica.spicaweather3.ui.widget.materialSharedAxisZOut
 import me.spica.spicaweather3.utils.noRippleClickable
 import org.koin.compose.viewmodel.koinActivityViewModel
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.PullToRefresh
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.ScrollBehavior
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /**
  * 主屏幕 - 展示天气信息的主要界面
@@ -123,7 +127,7 @@ fun MainScreen() {
 
     // ==================== UI 相关状态 ====================
     // 滚动行为控制器
-    val scrollBehavior = MiuixScrollBehavior()
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     // 导航控制器
     val navigator = LocalNavController.current
@@ -139,16 +143,12 @@ fun MainScreen() {
         }
     }
 
-    val refreshTexts = listOf(
-        stringResource(R.string.refresh_pull_down),
-        stringResource(R.string.refresh_release),
-        stringResource(R.string.refresh_refreshing),
-        stringResource(R.string.refresh_complete)
-    )
+    val pullToRefreshState = rememberPullToRefreshState()
 
     // ==================== UI 布局 ====================
     with(LocalSharedTransitionScope.current) {
         Scaffold(
+            containerColor = MaterialTheme.colorScheme.surface,
             modifier = Modifier
                 .fillMaxSize(),
             // 浮动添加按钮 - 跳转到城市列表
@@ -199,13 +199,22 @@ fun MainScreen() {
                     .fillMaxSize()
             ) {
                 // 下拉刷新容器
-                PullToRefresh(
+                PullToRefreshBox(
                     isRefreshing = isRefreshing.value,
                     onRefresh = { viewModel.refresh() },
-                    contentPadding = PaddingValues(top = MainScreenConstants.PULL_REFRESH_TOP_PADDING),
-                    color = MiuixTheme.colorScheme.onSurface,
-                    topAppBarScrollBehavior = scrollBehavior,
-                    refreshTexts = refreshTexts
+                    modifier = Modifier.fillMaxSize(),
+                    state = pullToRefreshState,
+                    indicator = {
+                        PullToRefreshDefaults.Indicator(
+                            modifier = Modifier
+                                .align(Alignment.TopCenter)
+                                .padding(top = paddingValues.calculateTopPadding()),
+                            state = pullToRefreshState,
+                            isRefreshing = isRefreshing.value,
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    },
                 ) {
                     // 横向分页器 - 多城市滑动浏览
                     WeatherPager(
@@ -230,7 +239,7 @@ private fun AddCityButton(
     onClick: () -> Unit
 ) {
     with(LocalSharedTransitionScope.current) {
-        val glassColor = MiuixTheme.colorScheme.onSurface.copy(alpha = .1f)
+        val glassColor = MaterialTheme.colorScheme.onSurface.copy(alpha = .1f)
         val glassStyle = remember(glassColor) {
             GlassStyle.regular.then {
                 shape(CircleShape)
@@ -254,7 +263,7 @@ private fun AddCityButton(
             Icon(
                 imageVector = Icons.Filled.Add,
                 contentDescription = stringResource(R.string.cd_add_city),
-                tint = MiuixTheme.colorScheme.onSurface,
+                tint = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.size(32.dp)
             )
         }
@@ -282,7 +291,7 @@ private fun AnimatedCityTitle(
         val fallbackName = stringResource(R.string.main_city_unknown)
         Text(
             text = name ?: fallbackName,
-            color = MiuixTheme.colorScheme.onSurface,
+            color = MaterialTheme.colorScheme.onSurface,
             fontSize = 22.sp,
             modifier = Modifier
                 .noRippleClickable(onClick = onClick)
@@ -298,7 +307,7 @@ private fun AnimatedCityTitle(
 private fun WeatherPager(
     pagerState: PagerState,
     weatherPageStates: List<WeatherPageState>,
-    scrollBehavior: ScrollBehavior,
+    scrollBehavior: TopAppBarScrollBehavior,
     paddingValues: PaddingValues
 ) {
     HorizontalPager(

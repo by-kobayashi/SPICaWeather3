@@ -21,6 +21,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,9 +32,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import me.spica.spicaweather3.ui.main.weather.WeatherPageState
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /**
  * 左栏 - 城市列表
@@ -45,7 +45,7 @@ fun CityListPane(
 ) {
   Column(
     modifier = modifier
-      .background(MiuixTheme.colorScheme.surfaceContainer)
+      .background(MaterialTheme.colorScheme.surfaceContainer)
       .statusBarsPadding()
       .navigationBarsPadding()
     ,
@@ -61,7 +61,7 @@ fun CityListPane(
         text = "城市列表",
         fontSize = 20.sp,
         fontWeight = FontWeight.Bold,
-        color = MiuixTheme.colorScheme.onSurface
+        color = MaterialTheme.colorScheme.onSurface
       )
     }
 
@@ -100,15 +100,15 @@ private fun CityListItem(
 
   // 根据选中状态计算颜色
   val backgroundColor = if (isSelected) {
-    MiuixTheme.colorScheme.primary.copy(alpha = 0.12f)
+    MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
   } else {
-    MiuixTheme.colorScheme.surfaceContainer
+    MaterialTheme.colorScheme.surfaceContainer
   }
 
   val contentColor = if (isSelected) {
-    MiuixTheme.colorScheme.primary
+    MaterialTheme.colorScheme.primary
   } else {
-    MiuixTheme.colorScheme.onSurface
+    MaterialTheme.colorScheme.onSurface
   }
 
   Row(
@@ -127,13 +127,13 @@ private fun CityListItem(
         modifier = Modifier
           .size(32.dp)
           .clip(CircleShape)
-          .background(MiuixTheme.colorScheme.primary.copy(alpha = 0.15f)),
+          .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
         contentAlignment = Alignment.Center
       ) {
         Icon(
           imageVector = Icons.Default.LocationOn,
           contentDescription = "定位",
-          tint = MiuixTheme.colorScheme.primary,
+          tint = MaterialTheme.colorScheme.primary,
           modifier = Modifier.size(18.dp)
         )
       }
@@ -156,7 +156,7 @@ private fun CityListItem(
         Text(
           text = "${city.administrativeArea1} · ${city.administrativeArea2}",
           fontSize = 12.sp,
-          color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+          color = MaterialTheme.colorScheme.onSurfaceVariant
         )
       }
     }

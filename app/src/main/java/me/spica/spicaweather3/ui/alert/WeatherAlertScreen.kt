@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+
 package me.spica.spicaweather3.ui.alert
 
 import androidx.compose.foundation.background
@@ -15,6 +17,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -40,13 +48,6 @@ import me.spica.spicaweather3.route.LocalNavController
 import me.spica.spicaweather3.ui.main.WeatherViewModel
 import me.spica.spicaweather3.ui.widget.MainTopBar
 import org.koin.compose.viewmodel.koinActivityViewModel
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.utils.overScrollVertical
 
 /**
  * 预警详情页
@@ -61,7 +62,7 @@ import top.yukonga.miuix.kmp.utils.overScrollVertical
 @Composable
 fun WeatherAlertScreen(cityId: String) {
   val navController = LocalNavController.current
-  val scrollBehavior = MiuixScrollBehavior()
+  val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
   val viewModel = koinActivityViewModel<WeatherViewModel>()
 
   val pageStates = viewModel.weatherPageStates.collectAsStateWithLifecycle().value
@@ -76,11 +77,12 @@ fun WeatherAlertScreen(cityId: String) {
   val hazeState = rememberHazeState()
 
   Scaffold(
+    containerColor = MaterialTheme.colorScheme.surface,
     topBar = {
       MainTopBar(
         modifier = Modifier.hazeBlur(
           input = HazeInput.Sources(hazeState),
-          style = HazeMaterials.ultraThin(MiuixTheme.colorScheme.surface).then {
+          style = HazeMaterials.ultraThin(MaterialTheme.colorScheme.surface).then {
             progressive(HazeProgressive.verticalGradient(startIntensity = 1f, endIntensity = 0f))
           }
         ),
@@ -88,8 +90,8 @@ fun WeatherAlertScreen(cityId: String) {
         title = {
           Text(
             stringResource(R.string.alert_info_title),
-            style = MiuixTheme.textStyles.headline2,
-            color = MiuixTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.W600
           )
         },
@@ -114,8 +116,8 @@ fun WeatherAlertScreen(cityId: String) {
       ) {
         Text(
           text = stringResource(R.string.alert_placeholder),
-          style = MiuixTheme.textStyles.body1,
-          color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+          style = MaterialTheme.typography.bodyLarge,
+          color = MaterialTheme.colorScheme.onSurfaceVariant
         )
       }
     } else {
@@ -124,8 +126,7 @@ fun WeatherAlertScreen(cityId: String) {
           .hazeSource(hazeState)
           .fillMaxSize()
           .padding(paddingValues)
-          .nestedScroll(scrollBehavior.nestedScrollConnection)
-          .overScrollVertical(),
+          .nestedScroll(scrollBehavior.nestedScrollConnection),
         contentPadding = PaddingValues(
           start = 15.dp,
           end = 15.dp,
@@ -133,7 +134,6 @@ fun WeatherAlertScreen(cityId: String) {
           bottom = 48.dp
         ),
         verticalArrangement = Arrangement.spacedBy(12.dp),
-        overscrollEffect = null
       ) {
         itemsIndexed(
           items = alerts,
@@ -152,9 +152,9 @@ fun WeatherAlertScreen(cityId: String) {
  */
 @Composable
 private fun AlertDetailItem(alert: WeatherAlert) {
-  val levelColor = alertLevelColor(alert.colorCode, MiuixTheme.colorScheme.primary)
+  val levelColor = alertLevelColor(alert.colorCode, MaterialTheme.colorScheme.primary)
   val onLevelColor = if (levelColor.luminance() > 0.5f) Color.Black else Color.White
-  val dividerColor = MiuixTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+  val dividerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
   val hasTimeInfo = alert.issuedTime.isNotBlank() ||
     alert.effectiveTime.isNotBlank() ||
     alert.expireTime.isNotBlank()
@@ -163,7 +163,7 @@ private fun AlertDetailItem(alert: WeatherAlert) {
     modifier = Modifier
       .fillMaxWidth()
       .background(
-        color = MiuixTheme.colorScheme.surfaceContainer,
+        color = MaterialTheme.colorScheme.surfaceContainer,
         shape = WIDGET_CARD_CORNER_SHAPE
       )
       .padding(18.dp),
@@ -185,7 +185,7 @@ private fun AlertDetailItem(alert: WeatherAlert) {
         ) {
           Text(
             text = alertSeverityLabel(alert.severity),
-            style = MiuixTheme.textStyles.footnote2,
+            style = MaterialTheme.typography.labelSmall,
             color = onLevelColor,
             fontWeight = FontWeight.W600
           )
@@ -193,8 +193,8 @@ private fun AlertDetailItem(alert: WeatherAlert) {
         if (alert.eventType.isNotBlank()) {
           Text(
             text = alert.eventType,
-            style = MiuixTheme.textStyles.body2,
-            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontWeight = FontWeight.W600,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
@@ -203,8 +203,8 @@ private fun AlertDetailItem(alert: WeatherAlert) {
       }
       Text(
         text = alert.headline.ifBlank { alert.eventType },
-        style = MiuixTheme.textStyles.title4,
-        color = MiuixTheme.colorScheme.onSurface,
+        style = MaterialTheme.typography.titleLarge,
+        color = MaterialTheme.colorScheme.onSurface,
         fontWeight = FontWeight.W700
       )
     }
@@ -214,7 +214,7 @@ private fun AlertDetailItem(alert: WeatherAlert) {
         modifier = Modifier
           .fillMaxWidth()
           .background(
-            color = MiuixTheme.colorScheme.onSurface.copy(alpha = 0.045f),
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.045f),
             shape = RoundedCornerShape(10.dp)
           )
           .padding(horizontal = 12.dp, vertical = 10.dp),
@@ -271,14 +271,14 @@ private fun AlertTextSection(title: String, content: String) {
   Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
     Text(
       text = title,
-      style = MiuixTheme.textStyles.subtitle,
-      color = MiuixTheme.colorScheme.onSurface,
+      style = MaterialTheme.typography.labelMedium,
+      color = MaterialTheme.colorScheme.onSurface,
       fontWeight = FontWeight.W700
     )
     Text(
       text = content,
-      style = MiuixTheme.textStyles.body1,
-      color = MiuixTheme.colorScheme.onSurface.copy(alpha = 0.78f)
+      style = MaterialTheme.typography.bodyLarge,
+      color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.78f)
     )
   }
 }
@@ -287,7 +287,7 @@ private fun AlertTextSection(title: String, content: String) {
 private fun AlertTimeRow(text: String) {
   Text(
     text = text,
-    style = MiuixTheme.textStyles.footnote1,
-    color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+    style = MaterialTheme.typography.bodySmall,
+    color = MaterialTheme.colorScheme.onSurfaceVariant
   )
 }

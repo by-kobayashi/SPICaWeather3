@@ -7,14 +7,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -35,9 +34,6 @@ import me.spica.spicaweather3.presentation.theme.WIDGET_CARD_TITLE_TEXT_STYLE
 import me.spica.spicaweather3.ui.alert.alertLevelColor
 import me.spica.spicaweather3.ui.alert.alertSeverityLabel
 import me.spica.spicaweather3.ui.alert.formatAlertTimeShort
-import top.yukonga.miuix.kmp.basic.HorizontalDivider
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 private const val MAX_ALERT_PREVIEWS = 3
 
@@ -52,7 +48,7 @@ fun AlertCard(
     }
     val previewAlerts = remember(alerts) { alerts.take(MAX_ALERT_PREVIEWS) }
     val remainingCount = alerts.size - previewAlerts.size
-    val dividerColor = MiuixTheme.colorScheme.surface.copy(alpha = 0.08f)
+    val dividerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.08f)
 
     Column(
         modifier = modifier
@@ -70,22 +66,22 @@ fun AlertCard(
             Icon(
                 painter = painterResource(R.drawable.material_symbols_outlined_brightness_alert),
                 contentDescription = null,
-                tint = MiuixTheme.colorScheme.onSurfaceContainer
+                tint = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = stringResource(R.string.alert_info_title),
                 modifier = Modifier.weight(1f),
                 maxLines = 1,
                 style = WIDGET_CARD_TITLE_TEXT_STYLE(),
-                color = MiuixTheme.colorScheme.onSurfaceContainer
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
 
         if (previewAlerts.isEmpty()) {
             Text(
                 text = stringResource(R.string.alert_placeholder),
-                style = MiuixTheme.textStyles.body1,
-                color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         } else {
             Column {
@@ -104,8 +100,8 @@ fun AlertCard(
                 Text(
                     text = stringResource(R.string.alert_more_count, remainingCount),
                     modifier = Modifier.fillMaxWidth(),
-                    style = MiuixTheme.textStyles.footnote1,
-                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -114,7 +110,7 @@ fun AlertCard(
 
 @Composable
 private fun AlertSummaryItem(alert: WeatherAlert) {
-    val levelColor = alertLevelColor(alert.colorCode, MiuixTheme.colorScheme.primary)
+    val levelColor = alertLevelColor(alert.colorCode, MaterialTheme.colorScheme.primary)
     val onLevelColor = if (levelColor.luminance() > 0.5f) Color.Black else Color.White
     val time = alert.expireTime.ifBlank { alert.issuedTime }
     Column(
@@ -132,7 +128,7 @@ private fun AlertSummaryItem(alert: WeatherAlert) {
             ) {
                 Text(
                     text = alertSeverityLabel(alert.severity),
-                    style = MiuixTheme.textStyles.footnote2,
+                    style = MaterialTheme.typography.labelSmall,
                     color = onLevelColor,
                     fontWeight = FontWeight.W600,
                     maxLines = 1,
@@ -145,8 +141,8 @@ private fun AlertSummaryItem(alert: WeatherAlert) {
                     modifier = Modifier.weight(1f),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    style = MiuixTheme.textStyles.footnote1,
-                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -155,8 +151,8 @@ private fun AlertSummaryItem(alert: WeatherAlert) {
             modifier = Modifier.fillMaxWidth(),
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
-            style = MiuixTheme.textStyles.body1,
-            color = MiuixTheme.colorScheme.onSurfaceContainer,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.W600
         )
         if (time.isNotBlank()) {
@@ -166,8 +162,8 @@ private fun AlertSummaryItem(alert: WeatherAlert) {
                 } else {
                     stringResource(R.string.alert_issued_at, formatAlertTimeShort(time))
                 },
-                style = MiuixTheme.textStyles.footnote1,
-                color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

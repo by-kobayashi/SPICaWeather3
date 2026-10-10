@@ -14,7 +14,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.SheetValue
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -34,7 +33,6 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collectLatest
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 val LocalMenuState = compositionLocalOf { MenuState() }
 
@@ -75,7 +73,7 @@ class MenuState(
 fun BottomSheetMenu(
   modifier: Modifier = Modifier,
   state: MenuState,
-  background: Color = MiuixTheme.colorScheme.secondaryContainer,
+  background: Color = MaterialTheme.colorScheme.secondaryContainer,
 ) {
   val focusManager = LocalFocusManager.current
   val hapticFeedback = LocalHapticFeedback.current
@@ -133,7 +131,7 @@ fun BottomSheetMenu(
                 .padding(vertical = 12.dp)
                 .size(width = 40.dp, height = 4.dp)
                 .clip(RoundedCornerShape(2.dp))
-                .background(MiuixTheme.colorScheme.onSurface.copy(alpha = 0.4f)),
+                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)),
           )
         },
         modifier =

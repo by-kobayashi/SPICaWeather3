@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -41,13 +42,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlin.math.ceil
 import me.spica.spicaweather3.R
 import me.spica.spicaweather3.common.type.WeatherAnimType
 import me.spica.spicaweather3.domain.model.WeatherData
 import me.spica.spicaweather3.ui.widget.WeatherBackground
 import me.spica.spicaweather3.ui.widget.rain.RainTextCollision
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import kotlin.math.ceil
 
 /**
  * 当前天气卡片
@@ -223,7 +223,7 @@ fun NowCard(modifier: Modifier = Modifier, weatherData: WeatherData, startAnim: 
                     weatherData.current.condition,
                     weatherData.current.feelsLike
                 ),
-                style = MiuixTheme.textStyles.body1,
+                style = MaterialTheme.typography.bodyLarge,
                 color = Color.White,
                 fontWeight = FontWeight.W600,
                 modifier = Modifier
@@ -241,7 +241,7 @@ fun NowCard(modifier: Modifier = Modifier, weatherData: WeatherData, startAnim: 
                     R.string.now_card_humidity,
                     weatherData.current.humidity
                 ),
-                style = MiuixTheme.textStyles.body2,
+                style = MaterialTheme.typography.bodyMedium,
                 color = Color.White,
                 fontWeight = FontWeight.W600,
                 modifier = Modifier
@@ -255,7 +255,7 @@ fun NowCard(modifier: Modifier = Modifier, weatherData: WeatherData, startAnim: 
                     )
                     // 应用 Cupertino 风格超薄毛玻璃效果
                     .background(
-                        MiuixTheme.colorScheme.surface.copy(alpha = 0.2f),
+                        MaterialTheme.colorScheme.surface.copy(alpha = 0.2f),
                         CircleShape
                     )
                     .padding(

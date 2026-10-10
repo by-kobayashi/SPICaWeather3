@@ -1,18 +1,20 @@
 package me.spica.spicaweather3.ui.main.cards
 
+import androidx.annotation.StringRes
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.annotation.StringRes
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,8 +30,6 @@ import me.spica.spicaweather3.R
 import me.spica.spicaweather3.presentation.theme.WIDGET_CARD_PADDING
 import me.spica.spicaweather3.presentation.theme.WIDGET_CARD_TITLE_TEXT_STYLE
 import me.spica.spicaweather3.ui.widget.RainDropContent
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /**
  * 湿度信息卡片
@@ -131,7 +131,7 @@ fun HumidityCard(modifier: Modifier = Modifier, humidity: Int = 55, startAnim: B
                                 alpha = textAnimValue2
                             }, text = "${(humidity * progressAnimValue).fastRoundToInt()}",
                         color = Color.White,
-                        style = MiuixTheme.textStyles.headline1.copy(
+                        style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.W900, fontSize = 56.sp
                         )
                     )
@@ -145,7 +145,7 @@ fun HumidityCard(modifier: Modifier = Modifier, humidity: Int = 55, startAnim: B
                             },
                         text = "%",
                         color = Color.White,
-                        style = MiuixTheme.textStyles.headline2.copy(
+                        style = MaterialTheme.typography.titleSmall.copy(
                             fontWeight = FontWeight.W900, fontSize = 22.sp
                         )
                     )
@@ -166,7 +166,7 @@ fun HumidityCard(modifier: Modifier = Modifier, humidity: Int = 55, startAnim: B
                                 translationY = -12.dp.toPx() * (1f - textAnimValue1)
                                 alpha = textAnimValue1
                             }, text = humidityTip, color = Color.White,
-                        style = MiuixTheme.textStyles.body1.copy(
+                        style = MaterialTheme.typography.bodyLarge.copy(
                             fontWeight = FontWeight.W500,
                             fontSize = 14.sp,
                             color = Color.White

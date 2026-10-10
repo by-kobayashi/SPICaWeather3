@@ -20,6 +20,11 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.compositionLocalOf
@@ -41,12 +46,8 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
-import kotlinx.coroutines.launch
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.math.roundToInt
+import kotlinx.coroutines.launch
 
 /**
  * 下拉菜单项数据类
@@ -159,7 +160,7 @@ fun DropdownMenuOverlay() {
       Box(
         modifier = Modifier
           .fillMaxSize()
-          .background(MiuixTheme.colorScheme.onSurface.copy(alpha = .08f))
+          .background(MaterialTheme.colorScheme.onSurface.copy(alpha = .08f))
           .pointerInput(Unit) {
             detectTapGestures {
               controller.dismiss()
@@ -249,6 +250,8 @@ private fun DropdownMenuContent(
   onDismiss: () -> Unit
 ) {
   Card(
+    shape = MaterialTheme.shapes.large,
+    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
     modifier = Modifier
       .fillMaxWidth(0.5f)
       .padding(horizontal = 16.dp),
@@ -294,9 +297,9 @@ private fun DropdownMenuItemContent(
         contentDescription = null,
         modifier = Modifier.size(24.dp),
         tint = if (item.enabled) {
-          MiuixTheme.colorScheme.onSurface
+          MaterialTheme.colorScheme.onSurface
         } else {
-          MiuixTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+          MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
         }
       )
       Spacer(modifier = Modifier.width(12.dp))
@@ -305,11 +308,11 @@ private fun DropdownMenuItemContent(
     // 文本
     Text(
       text = item.text,
-      style = MiuixTheme.textStyles.body1,
+      style = MaterialTheme.typography.bodyLarge,
       color = if (item.enabled) {
-        MiuixTheme.colorScheme.onSurface
+        MaterialTheme.colorScheme.onSurface
       } else {
-        MiuixTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
       }
     )
   }

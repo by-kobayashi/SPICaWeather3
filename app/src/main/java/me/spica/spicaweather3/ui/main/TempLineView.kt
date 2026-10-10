@@ -14,6 +14,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -39,7 +40,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import me.spica.spicaweather3.common.type.WeatherAnimType
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 
 private val ITEM_WIDTH = 80.dp
@@ -83,8 +83,8 @@ fun DailyTempLineView(
           ) {
             Text(
               text = item.date,
-              color = MiuixTheme.colorScheme.onSurface.copy(alpha = .6f),
-              style = MiuixTheme.textStyles.body2
+              color = MaterialTheme.colorScheme.onSurface.copy(alpha = .6f),
+              style = MaterialTheme.typography.bodyMedium
             )
             Icon(
               painter = painterResource(WeatherAnimType.getWeatherIconRes(item.iconId)),
@@ -96,15 +96,15 @@ fun DailyTempLineView(
             )
             Text(
               text = "${item.maxTemp}℃",
-              color = MiuixTheme.colorScheme.onSurface,
-              style = MiuixTheme.textStyles.footnote2,
+              color = MaterialTheme.colorScheme.onSurface,
+              style = MaterialTheme.typography.labelSmall,
               fontWeight = FontWeight.W600
             )
           }
         }
       }
 
-      val tintColor = MiuixTheme.colorScheme.onSurfaceContainer
+      val tintColor = MaterialTheme.colorScheme.onSurface
 
       // 缓存 Paint 对象，避免在 drawWithCache 内重复创建
       val linePaint = remember {
@@ -210,27 +210,27 @@ fun DailyTempLineView(
           ) {
             Text(
               text = "${item.minTemp}℃",
-              color = MiuixTheme.colorScheme.onSurface,
-              style = MiuixTheme.textStyles.footnote2,
+              color = MaterialTheme.colorScheme.onSurface,
+              style = MaterialTheme.typography.labelSmall,
               fontWeight = FontWeight.W600
             )
             Text(
               text = "${item.probabilityOfPrecipitation}%",
-              color = MiuixTheme.colorScheme.onSurface.copy(alpha = .7f),
-              style = MiuixTheme.textStyles.footnote1
+              color = MaterialTheme.colorScheme.onSurface.copy(alpha = .7f),
+              style = MaterialTheme.typography.bodySmall
             )
             Icon(
               Icons.AutoMirrored.Default.ArrowBack,
               contentDescription = null,
-              tint = MiuixTheme.colorScheme.onSurfaceContainer,
+              tint = MaterialTheme.colorScheme.onSurface,
               modifier = Modifier.rotate(
                 item.wind360 * 1f + 45f + 180f
               )
             )
             Text(
               text = item.windDirection,
-              color = MiuixTheme.colorScheme.onSurface,
-              style = MiuixTheme.textStyles.footnote2
+              color = MaterialTheme.colorScheme.onSurface,
+              style = MaterialTheme.typography.labelSmall
             )
           }
         }

@@ -1,5 +1,6 @@
 package me.spica.spicaweather3.ui.main.cards
 
+import androidx.annotation.StringRes
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
@@ -12,6 +13,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -26,7 +29,6 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
-import androidx.annotation.StringRes
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -35,8 +37,6 @@ import androidx.compose.ui.unit.sp
 import me.spica.spicaweather3.R
 import me.spica.spicaweather3.presentation.theme.WIDGET_CARD_PADDING
 import me.spica.spicaweather3.presentation.theme.WIDGET_CARD_TITLE_TEXT_STYLE
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /**
  * 体感温度卡片
@@ -101,11 +101,11 @@ fun FeelTempCard(feelTemp: Int, startAnim: Boolean) {
         Icon(
           painter = painterResource(id = R.drawable.material_symbols_outlined_accessibility_new),
           contentDescription = null,
-          tint = MiuixTheme.colorScheme.onSurface
+          tint = MaterialTheme.colorScheme.onSurface
         )
         Text(
           text = stringResource(R.string.feel_temp_title),
-          color = MiuixTheme.colorScheme.onSurface, style = WIDGET_CARD_TITLE_TEXT_STYLE(),
+          color = MaterialTheme.colorScheme.onSurface, style = WIDGET_CARD_TITLE_TEXT_STYLE(),
           modifier = Modifier.graphicsLayer {
             alpha = textAnimValue1
             translationY = -12.dp.toPx() * (1f - textAnimValue1)
@@ -120,13 +120,13 @@ fun FeelTempCard(feelTemp: Int, startAnim: Boolean) {
         // 温度数字（带递增动画和渐变色）
         Text(
           "${(feelTemp * textAnimValue4).toInt()}",
-          color = MiuixTheme.colorScheme.onSurface,
-          style = MiuixTheme.textStyles.title1.copy(
+          color = MaterialTheme.colorScheme.onSurface,
+          style = MaterialTheme.typography.headlineLarge.copy(
             brush = Brush.linearGradient(
               colors = listOf(
-                MiuixTheme.colorScheme.onSurface,
-                MiuixTheme.colorScheme.onSurface.copy(alpha = .8f),
-                MiuixTheme.colorScheme.onSurface.copy(alpha = .5f),
+                MaterialTheme.colorScheme.onSurface,
+                MaterialTheme.colorScheme.onSurface.copy(alpha = .8f),
+                MaterialTheme.colorScheme.onSurface.copy(alpha = .5f),
               )
             )
           ),
@@ -136,12 +136,12 @@ fun FeelTempCard(feelTemp: Int, startAnim: Boolean) {
         )
         // 温度单位（带淡入和位移动画）
         Text(
-          "℃", color = MiuixTheme.colorScheme.onSecondaryContainer, style = MiuixTheme.textStyles.title1.copy(
+          "℃", color = MaterialTheme.colorScheme.onSecondaryContainer, style = MaterialTheme.typography.headlineLarge.copy(
             brush = Brush.linearGradient(
               colors = listOf(
-                MiuixTheme.colorScheme.onSurface,
-                MiuixTheme.colorScheme.onSurface.copy(alpha = .8f),
-                MiuixTheme.colorScheme.onSurface.copy(alpha = .5f),
+                MaterialTheme.colorScheme.onSurface,
+                MaterialTheme.colorScheme.onSurface.copy(alpha = .8f),
+                MaterialTheme.colorScheme.onSurface.copy(alpha = .5f),
               )
             )
           ),
@@ -160,7 +160,7 @@ fun FeelTempCard(feelTemp: Int, startAnim: Boolean) {
       )
       // 温度描述文字（炎热/热/温暖等，带淡入动画）
       Text(
-        feelTempDesc, color = MiuixTheme.colorScheme.onSecondaryContainer, style = MiuixTheme.textStyles.body1,
+        feelTempDesc, color = MaterialTheme.colorScheme.onSecondaryContainer, style = MaterialTheme.typography.bodyLarge,
         fontWeight = FontWeight.W600,
         modifier = Modifier.graphicsLayer {
           alpha = textAnimValue3
@@ -170,7 +170,7 @@ fun FeelTempCard(feelTemp: Int, startAnim: Boolean) {
     }
 
     // ==================== 右侧温度可视化条 ====================
-    val borderColor = MiuixTheme.colorScheme.secondaryContainer.toArgb()
+    val borderColor = MaterialTheme.colorScheme.secondaryContainer.toArgb()
 
     // 缓存 Paint 对象，避免在 drawWithCache 内重复创建
     val linePaint = remember {

@@ -3,6 +3,7 @@ package me.spica.spicaweather3.ui.main.cards
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,6 +14,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,19 +37,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.em
+import java.time.LocalDateTime
 import me.spica.spicaweather3.R
-import me.spica.spicaweather3.domain.model.WeatherData
 import me.spica.spicaweather3.domain.model.DailyForecast
+import me.spica.spicaweather3.domain.model.WeatherData
 import me.spica.spicaweather3.presentation.theme.COLOR_BLACK_10
 import me.spica.spicaweather3.presentation.theme.WIDGET_CARD_CORNER_SHAPE
 import me.spica.spicaweather3.presentation.theme.WIDGET_CARD_TITLE_TEXT_STYLE
-import me.spica.spicaweather3.utils.noRippleClickable
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.utils.pressable
-import java.time.LocalDateTime
-import kotlin.random.Random
 
 /**
  * 天级别天气信息卡片
@@ -78,12 +75,12 @@ fun DailyCard(data: WeatherData) {
       Icon(
         painter = painterResource(id = R.drawable.material_symbols_outlined_calendar_today),
         contentDescription = null,
-        tint = MiuixTheme.colorScheme.onSurfaceContainer
+        tint = MaterialTheme.colorScheme.onSurface
       )
 
       Text(
         text = stringResource(R.string.daily_info_title),
-        color = MiuixTheme.colorScheme.onSurfaceContainer,
+        color = MaterialTheme.colorScheme.onSurface,
         style = WIDGET_CARD_TITLE_TEXT_STYLE()
       )
     }
@@ -114,8 +111,7 @@ private fun DailyItem(item: DailyForecast, limitLow: Int, limitHigh: Int) {
     Row(
       modifier = Modifier
         .fillMaxWidth()
-        .pressable(null)
-        .noRippleClickable {
+        .clickable {
           showExtraPanel = !showExtraPanel
         }
         .padding(
@@ -156,21 +152,21 @@ private fun DailyItem(item: DailyForecast, limitLow: Int, limitHigh: Int) {
       }
       Text(
         displayLabel,
-        style = MiuixTheme.textStyles.body1,
-        color = MiuixTheme.colorScheme.onSurfaceContainer,
+        style = MaterialTheme.typography.bodyLarge,
+        color = MaterialTheme.colorScheme.onSurface,
         fontWeight = FontWeight.W800,
       )
       Text(
         item.dayCondition,
-        style = MiuixTheme.textStyles.title4,
-        color = MiuixTheme.colorScheme.onSurfaceContainer,
+        style = MaterialTheme.typography.titleLarge,
+        color = MaterialTheme.colorScheme.onSurface,
         modifier = Modifier.weight(1f),
         textAlign = TextAlign.Center
       )
       Text(
         "${item.tempMin}℃",
-        style = MiuixTheme.textStyles.title4,
-        color = MiuixTheme.colorScheme.onSurfaceContainer,
+        style = MaterialTheme.typography.titleLarge,
+        color = MaterialTheme.colorScheme.onSurface,
         modifier = Modifier.width(50.dp),
         fontWeight = FontWeight.ExtraBold,
         textAlign = TextAlign.End
@@ -186,8 +182,8 @@ private fun DailyItem(item: DailyForecast, limitLow: Int, limitHigh: Int) {
       )
       Text(
         "${item.tempMax}℃",
-        style = MiuixTheme.textStyles.title4,
-        color = MiuixTheme.colorScheme.onSurfaceContainer,
+        style = MaterialTheme.typography.titleLarge,
+        color = MaterialTheme.colorScheme.onSurface,
         modifier = Modifier.width(50.dp),
         fontWeight = FontWeight.ExtraBold,
         textAlign = TextAlign.End
@@ -216,7 +212,7 @@ private fun DailyItem(item: DailyForecast, limitLow: Int, limitHigh: Int) {
             Icon(
               painter = painterResource(id = R.drawable.material_symbols_outlined_humidity_mid),
               contentDescription = null,
-              tint = MiuixTheme.colorScheme.onSurface.copy(alpha = .8f),
+              tint = MaterialTheme.colorScheme.onSurface.copy(alpha = .8f),
             )
           }
           ItemInfo(
@@ -227,7 +223,7 @@ private fun DailyItem(item: DailyForecast, limitLow: Int, limitHigh: Int) {
             Icon(
               painter = painterResource(id = R.drawable.material_symbols_outlined_smart_outlet),
               contentDescription = null,
-              tint = MiuixTheme.colorScheme.onSurface.copy(alpha = .8f),
+              tint = MaterialTheme.colorScheme.onSurface.copy(alpha = .8f),
             )
           }
         }
@@ -245,7 +241,7 @@ private fun DailyItem(item: DailyForecast, limitLow: Int, limitHigh: Int) {
             Icon(
               painter = painterResource(id = R.drawable.material_symbols_outlined_eye_tracking),
               contentDescription = null,
-              tint = MiuixTheme.colorScheme.onSurface.copy(alpha = .8f),
+              tint = MaterialTheme.colorScheme.onSurface.copy(alpha = .8f),
             )
           }
           ItemInfo(
@@ -256,7 +252,7 @@ private fun DailyItem(item: DailyForecast, limitLow: Int, limitHigh: Int) {
             Icon(
               painter = painterResource(id = R.drawable.material_symbols_outlined_grain),
               contentDescription = null,
-              tint = MiuixTheme.colorScheme.onSurface.copy(alpha = .8f),
+              tint = MaterialTheme.colorScheme.onSurface.copy(alpha = .8f),
             )
           }
         }
@@ -274,7 +270,7 @@ private fun DailyItem(item: DailyForecast, limitLow: Int, limitHigh: Int) {
             Icon(
               painter = painterResource(id = R.drawable.material_symbols_outlined_wind_power),
               contentDescription = null,
-              tint = MiuixTheme.colorScheme.onSurface.copy(alpha = .8f),
+              tint = MaterialTheme.colorScheme.onSurface.copy(alpha = .8f),
             )
           }
           ItemInfo(
@@ -285,7 +281,7 @@ private fun DailyItem(item: DailyForecast, limitLow: Int, limitHigh: Int) {
             Icon(
               painter = painterResource(id = R.drawable.material_symbols_outlined_arrow_upward),
               contentDescription = null,
-              tint = MiuixTheme.colorScheme.onSurface.copy(alpha = .8f),
+              tint = MaterialTheme.colorScheme.onSurface.copy(alpha = .8f),
               modifier = Modifier.rotate(item.windDirDay.toFloatOrNull() ?: 0f)
             )
           }
@@ -316,7 +312,7 @@ fun ItemInfo(
 ) {
   Row(
     modifier = modifier
-      .background(MiuixTheme.colorScheme.secondaryContainer, WIDGET_CARD_CORNER_SHAPE)
+      .background(MaterialTheme.colorScheme.secondaryContainer, WIDGET_CARD_CORNER_SHAPE)
       .padding(12.dp),
     horizontalArrangement = Arrangement.spacedBy(8.dp),
     verticalAlignment = Alignment.CenterVertically
@@ -328,13 +324,13 @@ fun ItemInfo(
     ) {
       Text(
         text = title,
-        style = MiuixTheme.textStyles.subtitle,
-        color = MiuixTheme.colorScheme.onSurface.copy(alpha = .6f),
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = .6f),
       )
       Text(
         text = value,
-        style = MiuixTheme.textStyles.body2,
-        color = MiuixTheme.colorScheme.onSurface,
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurface,
         fontWeight = FontWeight.W800
       )
     }

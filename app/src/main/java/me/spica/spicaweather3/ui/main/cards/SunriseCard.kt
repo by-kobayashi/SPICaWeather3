@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -34,16 +36,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import java.util.*
+import kotlin.math.PI
+import kotlin.math.sin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import me.spica.spicaweather3.R
 import me.spica.spicaweather3.domain.model.WeatherData
 import me.spica.spicaweather3.presentation.theme.WIDGET_CARD_TITLE_TEXT_STYLE
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import java.util.*
-import kotlin.math.PI
-import kotlin.math.sin
 
 /**
  * 日出日落信息卡片
@@ -89,8 +89,8 @@ fun SunriseCard(weatherEntity: WeatherData, startAnim: Boolean) {
       Text(
         stringResource(R.string.sunrise_no_data),
         modifier = Modifier.align(Alignment.Center),
-        style = MiuixTheme.textStyles.title2,
-        color = MiuixTheme.colorScheme.onSurface.copy(alpha = .9f)
+        style = MaterialTheme.typography.headlineMedium,
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = .9f)
       )
     }
 
@@ -148,7 +148,7 @@ fun SunriseCard(weatherEntity: WeatherData, startAnim: Boolean) {
 
 
   // 路径背景颜色
-  val pathBgColor = MiuixTheme.colorScheme.secondaryContainer
+  val pathBgColor = MaterialTheme.colorScheme.secondaryContainer
 
   // ==================== 主布局 ====================
   Column(
@@ -171,7 +171,7 @@ fun SunriseCard(weatherEntity: WeatherData, startAnim: Boolean) {
       Icon(
         painter = painterResource(id = R.drawable.material_symbols_outlined_sunny),
         contentDescription = null,
-        tint = MiuixTheme.colorScheme.onSurface,
+        tint = MaterialTheme.colorScheme.onSurface,
         modifier = Modifier.graphicsLayer {
           scaleX = textAnimValue1
           scaleY = textAnimValue1
@@ -181,7 +181,7 @@ fun SunriseCard(weatherEntity: WeatherData, startAnim: Boolean) {
       // 标题文字（渐显和向上平移动画）
       Text(
         text = stringResource(R.string.sunrise_title),
-        color = MiuixTheme.colorScheme.onSurface, style = WIDGET_CARD_TITLE_TEXT_STYLE(),
+        color = MaterialTheme.colorScheme.onSurface, style = WIDGET_CARD_TITLE_TEXT_STYLE(),
         modifier = Modifier.graphicsLayer {
           alpha = textAnimValue2
           translationY = -12.dp.toPx() * (1f - textAnimValue2)
@@ -343,8 +343,8 @@ fun SunriseCard(weatherEntity: WeatherData, startAnim: Boolean) {
           R.string.sunrise_label,
           weatherEntity.forecast.today.sunrise
         ),
-        style = MiuixTheme.textStyles.footnote1,
-        color = MiuixTheme.colorScheme.onSurface,
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurface,
         fontWeight = FontWeight.Bold
       )
       // 右侧：日落时间
@@ -353,8 +353,8 @@ fun SunriseCard(weatherEntity: WeatherData, startAnim: Boolean) {
           R.string.sunset_label,
           weatherEntity.forecast.today.sunset
         ),
-        style = MiuixTheme.textStyles.footnote1,
-        color = MiuixTheme.colorScheme.onSurface,
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurface,
         fontWeight = FontWeight.Bold
       )
     }

@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+
 package me.spica.spicaweather3.ui.main.weather
 
 import androidx.compose.animation.core.LinearEasing
@@ -9,11 +11,13 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -24,14 +28,11 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
+import kotlin.random.Random
 import me.spica.spicaweather3.common.model.WeatherCardConfig
 import me.spica.spicaweather3.domain.model.WeatherData
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyGridState
-import top.yukonga.miuix.kmp.basic.ScrollBehavior
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import kotlin.random.Random
 
 /**
  * 天气卡片网格
@@ -50,7 +51,7 @@ fun WeatherCardsGrid(
     cityId: String,
     weatherData: WeatherData,
     onReorder: (List<WeatherCardConfig>) -> Unit,
-    scrollBehavior: ScrollBehavior,
+    scrollBehavior: TopAppBarScrollBehavior,
     modifier: Modifier = Modifier,
     paddingValues: PaddingValues
 ) {
@@ -136,8 +137,8 @@ fun WeatherCardsGrid(
         ) {
             Text(
                 "感谢和风天气提供数据支持",
-                color = MiuixTheme.colorScheme.onSurface,
-                style = MiuixTheme.textStyles.footnote1,
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.bodySmall,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
         }

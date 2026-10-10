@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+
 package me.spica.spicaweather3.ui.widget
 
 
@@ -17,6 +19,7 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.SideEffect
@@ -24,7 +27,6 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -34,12 +36,12 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastFirst
 import androidx.compose.ui.util.lerp
-import top.yukonga.miuix.kmp.basic.ScrollBehavior
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -51,22 +53,18 @@ fun MainTopBar(
   largeTitle: @Composable () -> Unit = {},
   navigationIcon: @Composable () -> Unit = {},
   actions: @Composable RowScope.() -> Unit = {},
-  scrollBehavior: ScrollBehavior? = null,
+  scrollBehavior: TopAppBarScrollBehavior? = null,
   defaultWindowInsetsPadding: Boolean = true,
   horizontalPadding: Dp = 26.dp
 ) {
 
   val largeTitleHeight = remember { mutableStateOf(0) }
 
-  val expandedHeightPx by rememberUpdatedState(
-    remember(largeTitleHeight.value) {
-      largeTitleHeight.value.toFloat().coerceAtLeast(0f)
-    }
-  )
+  val collapsedHeightPx = with(LocalDensity.current) { 56.dp.toPx() }
+  val expandedHeightPx = (largeTitleHeight.value - collapsedHeightPx).coerceAtLeast(0f)
 
   SideEffect {
-    // Sets the app bar's height offset to collapse the entire bar's height when content is
-    // scrolled.
+    // Material 3 的折叠范围只包含展开高度与收起高度的差值。
     if (scrollBehavior?.state?.heightOffsetLimit != -expandedHeightPx) {
       scrollBehavior?.state?.heightOffsetLimit = -expandedHeightPx
     }
@@ -119,16 +117,18 @@ private fun TopAppBarLayout(
   }
 
   // Small Title Animation
-  val extOffset by remember(scrolledOffset) {
+  val extOffset by remember(scrolledOffset, expandedHeightPx) {
     derivedStateOf {
-      abs(scrolledOffset.offset()) / expandedHeightPx * 2
+      if (expandedHeightPx > 0f) abs(scrolledOffset.offset()) / expandedHeightPx * 2 else 2f
     }
   }
 
   // Large Title Alpha Animation
   val largeTitleAlpha by remember(scrolledOffset, expandedHeightPx) {
     derivedStateOf {
-      1f - (abs(scrolledOffset.offset()) / expandedHeightPx * 2).coerceIn(0f, 1f)
+      if (expandedHeightPx > 0f) {
+        1f - (abs(scrolledOffset.offset()) / expandedHeightPx * 2).coerceIn(0f, 1f)
+      } else 0f
     }
   }
 

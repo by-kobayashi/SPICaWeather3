@@ -5,6 +5,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,6 +17,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -38,23 +41,18 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastRoundToInt
+import java.time.OffsetDateTime
 import me.spica.spicaweather3.R
 import me.spica.spicaweather3.domain.model.WeatherData
 import me.spica.spicaweather3.presentation.theme.WIDGET_CARD_CORNER_SHAPE
 import me.spica.spicaweather3.presentation.theme.WIDGET_CARD_PADDING
 import me.spica.spicaweather3.presentation.theme.WIDGET_CARD_TITLE_TEXT_STYLE
-import java.time.LocalDateTime
-import java.time.OffsetDateTime
 import me.spica.spicaweather3.ui.main.DailyTempLineView
 import me.spica.spicaweather3.ui.main.ItemWindData
 import me.spica.spicaweather3.ui.main.TempLineItem
 import me.spica.spicaweather3.ui.main.WindChart
 import me.spica.spicaweather3.ui.widget.materialSharedAxisZIn
 import me.spica.spicaweather3.ui.widget.materialSharedAxisZOut
-import me.spica.spicaweather3.utils.noRippleClickable
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.utils.pressable
 
 @Composable
 fun HourlyCard(modifier: Modifier = Modifier, weatherData: WeatherData) {
@@ -72,11 +70,11 @@ fun HourlyCard(modifier: Modifier = Modifier, weatherData: WeatherData) {
       Icon(
         painter = painterResource(id = R.drawable.material_symbols_outlined_view_day),
         contentDescription = null,
-        tint = MiuixTheme.colorScheme.onSurfaceContainer
+        tint = MaterialTheme.colorScheme.onSurface
       )
       Text(
         text = stringResource(R.string.hourly_info_title),
-        color = MiuixTheme.colorScheme.onSurfaceContainer, style = WIDGET_CARD_TITLE_TEXT_STYLE(),
+        color = MaterialTheme.colorScheme.onSurface, style = WIDGET_CARD_TITLE_TEXT_STYLE(),
       )
     }
 
@@ -174,14 +172,14 @@ private fun TabRowWithContour(titles: List<String>, onTabSelected: (Int) -> Unit
   Box(
     modifier = Modifier
       .background(
-        MiuixTheme.colorScheme.secondaryContainer,
+        MaterialTheme.colorScheme.secondaryContainer,
         radius
       )
       .innerShadow(
         shape = radius,
         shadow = Shadow(
           radius = 4.dp,
-          color = MiuixTheme.colorScheme.secondaryContainer,
+          color = MaterialTheme.colorScheme.secondaryContainer,
           alpha = .2f,
         )
       )
@@ -196,7 +194,7 @@ private fun TabRowWithContour(titles: List<String>, onTabSelected: (Int) -> Unit
           .width(indicatorWidth)
           .height(indicatorHeight)
           .background(
-            MiuixTheme.colorScheme.surfaceContainer,
+            MaterialTheme.colorScheme.surfaceContainer,
             radius
           )
       )
@@ -238,7 +236,7 @@ fun TabItem(
 ) {
 
   val textColor by animateColorAsState(
-    targetValue = if (selected) MiuixTheme.colorScheme.onSurfaceContainer else MiuixTheme.colorScheme.onSurfaceContainer.copy(
+    targetValue = if (selected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(
       alpha = 0.6f
     ), label = ""
   )
@@ -254,10 +252,9 @@ fun TabItem(
       .clip(
         RoundedCornerShape(12.dp)
       )
-      .noRippleClickable {
+      .clickable {
         onClick()
       }
-      .pressable(null)
       .padding(horizontal = 12.dp, vertical = 6.dp),
     contentAlignment = Alignment.Center
   ) {
@@ -265,7 +262,7 @@ fun TabItem(
       title,
       color = textColor,
       fontWeight = fontWeight,
-      style = MiuixTheme.textStyles.button.copy(fontSize = 14.5.sp)
+      style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.5.sp)
     )
   }
 }

@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -26,8 +28,6 @@ import me.spica.spicaweather3.R
 import me.spica.spicaweather3.domain.model.WeatherData
 import me.spica.spicaweather3.presentation.theme.WIDGET_CARD_PADDING
 import me.spica.spicaweather3.presentation.theme.WIDGET_CARD_TITLE_TEXT_STYLE
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 
 @Composable
@@ -50,17 +50,17 @@ fun MinutelyCard(
       Icon(
         painter = painterResource(id = R.drawable.material_symbols_outlined_rainy_light),
         contentDescription = null,
-        tint = MiuixTheme.colorScheme.onSurfaceContainer
+        tint = MaterialTheme.colorScheme.onSurface
       )
       Text(
         text = stringResource(R.string.minutely_info_title),
-        color = MiuixTheme.colorScheme.onSurfaceContainer, style = WIDGET_CARD_TITLE_TEXT_STYLE(),
+        color = MaterialTheme.colorScheme.onSurface, style = WIDGET_CARD_TITLE_TEXT_STYLE(),
       )
     }
 
-    val lineColor = MiuixTheme.colorScheme.onSecondaryContainer.copy(alpha = .31f)
+    val lineColor = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = .31f)
 
-    val rainLineColor = MiuixTheme.colorScheme.primary
+    val rainLineColor = MaterialTheme.colorScheme.primary
 
     val rainData = weatherData.minutelyPrecip ?: return
 
@@ -101,7 +101,7 @@ fun MinutelyCard(
     // 将颜色转换为 ARGB 以便在 drawWithCache 中使用
     val lineColorArgb = lineColor.toArgb()
     val rainLineColorArgb = rainLineColor.toArgb()
-    val textColor = MiuixTheme.colorScheme.onSurfaceContainer.toArgb()
+    val textColor = MaterialTheme.colorScheme.onSurface.toArgb()
     Box(
       modifier = Modifier
         .fillMaxWidth()
