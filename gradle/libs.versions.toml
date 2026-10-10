@@ -1,7 +1,7 @@
 [versions]
 accompanistSystemuicontroller = "0.36.0"
 accompanistVersion = "0.37.3"
-agp = "9.2.1"
+agp = "9.4.1"
 androidautosize = "v1.2.1"
 backdrop = "2.0.0"
 baidumapsdk_location = "9.6.7"
