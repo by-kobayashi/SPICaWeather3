@@ -29,10 +29,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -40,9 +40,9 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlin.math.ceil
 import me.spica.spicaweather3.R
 import me.spica.spicaweather3.common.type.WeatherAnimType
 import me.spica.spicaweather3.domain.model.WeatherData
@@ -68,11 +68,7 @@ fun NowCard(modifier: Modifier = Modifier, weatherData: WeatherData, startAnim: 
 
 
     // 根据天气图标ID计算对应的天气动画类型（晴天、雨天、雪天等）
-    val currentWeatherAnimType = remember(weatherData) {
-        WeatherAnimType.getAnimType(
-            weatherData.current.icon,
-        )
-    }
+    val currentWeatherAnimType = WeatherAnimType.RainDark
 
     // ==================== 动画配置 ====================
     // 温度数字动画（无延迟，持续450ms）
@@ -93,68 +89,62 @@ fun NowCard(modifier: Modifier = Modifier, weatherData: WeatherData, startAnim: 
         animationSpec = tween(durationMillis = 550, 150)
     ).value
 
-    // ==================== 温度文本碰撞追踪 ====================
-    var boxRectInRoot by remember { mutableStateOf(Rect.Zero) }
-    var temperatureRectInRoot by remember { mutableStateOf(Rect.Zero) }
-    var conditionRectInRoot by remember { mutableStateOf(Rect.Zero) }
+    // 形状仅依赖文字内容和未裁剪的布局尺寸；滚动不改变卡片内部的碰撞坐标。
+    val collisionLayout = remember { RainCollisionLayout() }
+    val temperatureSize = collisionLayout.temperature.size
+    val conditionSize = collisionLayout.condition.size
     val density = LocalDensity.current
     val tempTextSizePx = with(density) { 94.sp.toPx() }.toInt()
     val unitTextSizePx = with(density) { 45.sp.toPx() }.toInt()
     val conditionTextSizePx = with(density) { 16.sp.toPx() }.toInt()
     val conditionPaddingStartPx = with(density) { 12.dp.toPx() }.toInt()
-    val textCollision = remember(
-        weatherData.current.temperature,
-        boxRectInRoot,
-        temperatureRectInRoot,
-        tempTextSizePx,
-        unitTextSizePx,
+    val translationDistancePx = with(density) { 12.dp.toPx() }
+    val showRain = currentWeatherAnimType.showRain
+    val temperatureBitmap = remember(
+        showRain, weatherData.current.temperature, temperatureSize, tempTextSizePx, unitTextSizePx,
     ) {
-        if (boxRectInRoot == Rect.Zero || temperatureRectInRoot == Rect.Zero) {
-            null
-        } else {
-            RainTextCollision(
-                bitmap = createTemperatureCollisionBitmap(
-                    temperature = weatherData.current.temperature,
-                    widthPx = ceil(temperatureRectInRoot.width).toInt().coerceAtLeast(1),
-                    heightPx = ceil(temperatureRectInRoot.height).toInt().coerceAtLeast(1),
-                    temperatureTextSizePx = tempTextSizePx,
-                    unitTextSizePx = unitTextSizePx,
-                ),
-                left = temperatureRectInRoot.left - boxRectInRoot.left,
-                top = temperatureRectInRoot.top - boxRectInRoot.top,
-            )
-        }
+        if (!showRain || temperatureSize.width == 0 || temperatureSize.height == 0) null
+        else createTemperatureCollisionBitmap(
+            temperature = weatherData.current.temperature,
+            widthPx = temperatureSize.width,
+            heightPx = temperatureSize.height,
+            temperatureTextSizePx = tempTextSizePx,
+            unitTextSizePx = unitTextSizePx,
+        )
     }
     val conditionText = stringResource(
         R.string.now_card_condition,
         weatherData.current.condition,
         weatherData.current.feelsLike
     )
-    val conditionCollision = remember(
-        conditionText,
-        conditionTextSizePx,
-        conditionPaddingStartPx,
-        boxRectInRoot,
-        conditionRectInRoot,
+    val conditionBitmap = remember(
+        showRain, conditionText, conditionSize, conditionTextSizePx, conditionPaddingStartPx,
     ) {
-        if (boxRectInRoot == Rect.Zero || conditionRectInRoot == Rect.Zero) {
-            null
-        } else {
-            RainTextCollision(
-                bitmap = createSolidCollisionBitmap(
-                    text = conditionText,
-                    widthPx = ceil(conditionRectInRoot.width).toInt().coerceAtLeast(1),
-                    heightPx = ceil(conditionRectInRoot.height).toInt().coerceAtLeast(1),
-                    textSizePx = conditionTextSizePx,
-                    paddingStartPx = conditionPaddingStartPx,
-                ),
-                left = conditionRectInRoot.left - boxRectInRoot.left,
-                top = conditionRectInRoot.top - boxRectInRoot.top,
-            )
-        }
+        if (!showRain || conditionSize.width == 0 || conditionSize.height == 0) null
+        else createSolidCollisionBitmap(
+            text = conditionText,
+            widthPx = conditionSize.width,
+            heightPx = conditionSize.height,
+            textSizePx = conditionTextSizePx,
+            paddingStartPx = conditionPaddingStartPx,
+        )
     }
-    val textCollisions = remember(textCollision, conditionCollision) {
-        listOfNotNull(textCollision, conditionCollision)
+    val temperatureOffset = collisionLayout.temperature.offset
+    val conditionOffset = collisionLayout.condition.offset
+    val temperatureTop = temperatureOffset.y - translationDistancePx * (1f - textAnimValue1)
+    val conditionTop = conditionOffset.y - translationDistancePx * (1f - textAnimValue2)
+    val textCollisions = remember(
+        temperatureBitmap, conditionBitmap, temperatureOffset.x, temperatureTop,
+        conditionOffset.x, conditionTop,
+    ) {
+        listOfNotNull(
+            temperatureBitmap?.let {
+                RainTextCollision("temperature", it, temperatureOffset.x, temperatureTop)
+            },
+            conditionBitmap?.let {
+                RainTextCollision("condition", it, conditionOffset.x, conditionTop)
+            },
+        )
     }
 
     // ==================== 主布局 ====================
@@ -162,7 +152,7 @@ fun NowCard(modifier: Modifier = Modifier, weatherData: WeatherData, startAnim: 
     Box(
         modifier = modifier
             .aspectRatio(1.21f) // 宽高比 1.21:1，保持卡片比例
-            .onGloballyPositioned { boxRectInRoot = it.boundsInRoot() }
+            .onGloballyPositioned { collisionLayout.updateCard(it) }
     ) {
         // 动态天气背景（晴天、雨天、雪天等不同动画效果）
         WeatherBackground(
@@ -185,55 +175,65 @@ fun NowCard(modifier: Modifier = Modifier, weatherData: WeatherData, startAnim: 
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             // 当前温度（大号显示，带渐显和向上平移动画）
-            Text(
-                modifier = Modifier
-                    .graphicsLayer {
-                        alpha = textAnimValue1
-                        translationY = -12.dp.toPx() * (1f - textAnimValue1)
-                    }
-                    .onGloballyPositioned { temperatureRectInRoot = it.boundsInRoot() },
-                text = buildAnnotatedString {
-                    // 温度数字（94sp 超大字体）
-                    withStyle(
-                        style = SpanStyle(
-                            color = Color.White,
-                            fontSize = 94.sp,
-                            fontWeight = FontWeight.W800
-                        )
-                    ) {
-                        append(weatherData.current.temperature.toString())
-                    }
-                    // 温度单位（45sp 较小字体）
-                    withStyle(
-                        style = SpanStyle(
-                            color = Color.White,
-                            fontSize = 45.sp,
-                            fontWeight = FontWeight.W800
-                        )
-                    ) {
-                        append("°")
-                    }
-                },
-            )
+            Box(
+                modifier = Modifier.onGloballyPositioned {
+                    collisionLayout.temperature.update(it, collisionLayout.card)
+                }
+            ) {
+                Text(
+                    modifier = Modifier
+                        .graphicsLayer {
+                            alpha = textAnimValue1
+                            translationY = -12.dp.toPx() * (1f - textAnimValue1)
+                        },
+                    text = buildAnnotatedString {
+                        // 温度数字（94sp 超大字体）
+                        withStyle(
+                            style = SpanStyle(
+                                color = Color.White,
+                                fontSize = 94.sp,
+                                fontWeight = FontWeight.W800
+                            )
+                        ) {
+                            append(weatherData.current.temperature.toString())
+                        }
+                        // 温度单位（45sp 较小字体）
+                        withStyle(
+                            style = SpanStyle(
+                                color = Color.White,
+                                fontSize = 45.sp,
+                                fontWeight = FontWeight.W800
+                            )
+                        ) {
+                            append("°")
+                        }
+                    },
+                )
+            }
 
             // 天气状况和体感温度（带延迟渐显和向上平移动画）
-            Text(
-                text = stringResource(
-                    R.string.now_card_condition,
-                    weatherData.current.condition,
-                    weatherData.current.feelsLike
-                ),
-                style = MaterialTheme.typography.bodyLarge,
-                color = Color.White,
-                fontWeight = FontWeight.W600,
-                modifier = Modifier
-                    .graphicsLayer {
-                        alpha = textAnimValue2
-                        translationY = -12.dp.toPx() * (1f - textAnimValue2)
-                    }
-                    .onGloballyPositioned { conditionRectInRoot = it.boundsInRoot() }
-                    .padding(start = 12.dp)
-            )
+            Box(
+                modifier = Modifier.onGloballyPositioned {
+                    collisionLayout.condition.update(it, collisionLayout.card)
+                }
+            ) {
+                Text(
+                    text = stringResource(
+                        R.string.now_card_condition,
+                        weatherData.current.condition,
+                        weatherData.current.feelsLike
+                    ),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Color.White,
+                    fontWeight = FontWeight.W600,
+                    modifier = Modifier
+                        .graphicsLayer {
+                            alpha = textAnimValue2
+                            translationY = -12.dp.toPx() * (1f - textAnimValue2)
+                        }
+                        .padding(start = 12.dp)
+                )
+            }
 
             // 湿度信息（带毛玻璃背景、延迟渐显和向上平移动画）
             Text(
@@ -263,6 +263,41 @@ fun NowCard(modifier: Modifier = Modifier, weatherData: WeatherData, startAnim: 
                         vertical = 4.dp
                     )
             )
+        }
+    }
+}
+
+/** 跟踪未参与文字平移动画的外层布局，避免重复计入 graphicsLayer 的位移。 */
+private class RainCollisionLayout {
+    var card: LayoutCoordinates? = null
+        private set
+    val temperature = TextBounds()
+    val condition = TextBounds()
+
+    fun updateCard(coordinates: LayoutCoordinates) {
+        card = coordinates
+        temperature.updateParent(coordinates)
+        condition.updateParent(coordinates)
+    }
+
+    class TextBounds {
+        private var coordinates: LayoutCoordinates? = null
+        var size by mutableStateOf(IntSize.Zero)
+            private set
+        var offset by mutableStateOf(Offset.Zero)
+            private set
+
+        fun update(coordinates: LayoutCoordinates, parent: LayoutCoordinates?) {
+            this.coordinates = coordinates
+            updateParent(parent)
+        }
+
+        fun updateParent(parent: LayoutCoordinates?) {
+            val child = coordinates ?: return
+            if (parent?.isAttached != true || !child.isAttached) return
+            // localPositionOf 消除共同祖先的滚动、缩放；size 不受祖先裁剪影响。
+            offset = parent.localPositionOf(child, Offset.Zero)
+            size = child.size
         }
     }
 }

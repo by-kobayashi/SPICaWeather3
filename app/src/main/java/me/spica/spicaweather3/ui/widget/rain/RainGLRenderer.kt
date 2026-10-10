@@ -234,10 +234,6 @@ class RainGLRenderer {
         // 水体边界阈值：累积 alpha 超过此值 → 视为连续液体
         private const val METABALL_ALPHA_THRESHOLD = 0.42f
 
-        // 水花粒子最大向下速度阈值：超出则视为仍在下落，不渲染为水花
-        // RainSimulation: COHESIVE_MIN_VY=5, 碰撞后反弹速度通常 < 20; 下落时 vy≈40~100
-        private const val SPLASH_MAX_VY = 18f
-
         // 每个 vertex 3 个 float: (x, y, alpha)
         private const val FLOATS_PER_VERT = 3
     }
@@ -334,15 +330,15 @@ class RainGLRenderer {
         val infos      = simulation.groupInfos
         val infoCount  = simulation.groupInfoCount
 
-        // cohesive（下落阶段）粒子不再渲染：视觉落雨由 Pass 1/2 着色器负责，与 testApp 一致
-        // splashCount 作为 VBO 上限；过滤后实际写入数可能更少，用 actualSplashCount 追踪
+        // 下落粒子不绘制；只有实际接触过碰撞体的粒子组才生成水花。
+        // 统计已碰撞组的粒子数，为背景雨线和水花准备共用 VBO。
         var splashCount = 0
         for (idx in 0 until infoCount) {
             val info = infos[idx]
-            if (!info.cohesive) splashCount += info.particleCount
+            if (info.isSplash) splashCount += info.particleCount
         }
 
-        // VBO 空间：背景雨线 + 水花上限（不含 cohesive 下落粒子）
+        // VBO 空间：背景雨线 + 水花上限（不含未碰撞的下落粒子）
         val bgFloats = if (bgStreaks != null) BackgroundRainStreaks.TOTAL_FLOATS else 0
         val totalFloats = bgFloats + splashCount * FLOATS_PER_VERT
         var bgVertCount = 0
@@ -362,19 +358,15 @@ class RainGLRenderer {
 
             splashOffset = bgVertCount
 
-            // ── 填充散开组：逐粒子过滤快速下落粒子，只渲染真正的水花 ──
-            // 下落中的粒子因液体内压横向扩散后 cohesive 可能变 false，
-            // 但 vy 仍远大于碰撞后溅起粒子 → 用速度阈值排除
+            // 水花状态随粒子组保留到回收，反弹后再次下落也不会突然消失。
             for (idx in 0 until infoCount) {
                 val info = infos[idx]
-                if (info.cohesive) continue
+                if (!info.isSplash) continue
                 val start = info.bufferStart
                 val end   = start + info.particleCount
                 for (i in start until end) {
                     val vx    = velocities[i].x
                     val vyVal = velocities[i].y
-                    // vyVal > 0 = 向下；超过阈值说明仍在快速下落，跳过
-                    if (vyVal > SPLASH_MAX_VY) continue
                     val px    = positions[i].x * prop
                     val py    = positions[i].y * prop
                     val spd   = sqrt(vx * vx + vyVal * vyVal)
