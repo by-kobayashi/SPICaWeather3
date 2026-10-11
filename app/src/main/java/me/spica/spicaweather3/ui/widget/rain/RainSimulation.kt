@@ -12,6 +12,7 @@ import org.jbox2d.particle.ParticleGroup
 import org.jbox2d.particle.ParticleGroupDef
 import org.jbox2d.particle.ParticleType
 import kotlin.math.cos
+import kotlin.math.ceil
 import kotlin.math.sin
 import kotlin.random.Random
 
@@ -23,6 +24,9 @@ class GroupRenderInfo {
     var isSplash: Boolean = false   // 所属粒子组是否已接触碰撞体
     var bufferStart: Int = 0        // 粒子在全局缓冲中的起始索引
     var particleCount: Int = 0      // 该组的粒子数量
+    var splashAgeSeconds: Float = 0f
+    var splashDurationSeconds: Float = 0f
+    var splashSeed: Int = 0
 }
 
 private data class EmitterSlot(
@@ -32,6 +36,9 @@ private data class EmitterSlot(
     var startedAtMs: Long = 0L,
     var durationMs: Long = 0L,
     var hasCollided: Boolean = false,
+    var splashStartedAtStep: Long = 0L,
+    var splashDurationSeconds: Float = 0f,
+    var splashSeed: Int = 0,
 )
 
 /**
@@ -86,6 +93,7 @@ class RainSimulation(
     private lateinit var world: World
     private lateinit var textColliders: RainTextColliders
     private var elapsedSteps = 0L
+    private var nextSplashSeed = 0
 
     // 独立发射槽：每个槽位单独维护激活组和下次补发时间，避免整批刷出
     private val emitterSlots = ArrayList<EmitterSlot>(MAX_GROUPS)
@@ -145,6 +153,7 @@ class RainSimulation(
         world.particleMaxCount = MAX_PARTICLES
         textColliders = RainTextColliders(world, proportion)
         elapsedSteps = 0L
+        nextSplashSeed = 0
         appliedCollisionRect = null
         collisionBody = null
         syncCollisionBody()
@@ -179,7 +188,15 @@ class RainSimulation(
         val groups = world.particleGroupBuffer
         for (i in 0 until world.particleBodyContactCount) {
             val slot = groups[contacts[i].index]?.userData as? EmitterSlot ?: continue
-            slot.hasCollided = true
+            if (!slot.hasCollided) {
+                slot.hasCollided = true
+                slot.splashStartedAtStep = elapsedSteps
+                // 临近原定回收时间才发生碰撞时，也允许本次水花完成渐隐。
+                slot.durationMs = maxOf(
+                    slot.durationMs,
+                    now - slot.startedAtMs + ceil(slot.splashDurationSeconds * 1000f).toLong()
+                )
+            }
         }
         computeGroupInfos()
     }
@@ -274,6 +291,11 @@ class RainSimulation(
             info.isSplash = slot.hasCollided
             info.bufferStart = group.bufferIndex
             info.particleCount = group.particleCount
+            info.splashAgeSeconds = if (slot.hasCollided) {
+                (elapsedSteps - slot.splashStartedAtStep) * RainFrameClock.STEP_SECONDS
+            } else 0f
+            info.splashDurationSeconds = slot.splashDurationSeconds
+            info.splashSeed = slot.splashSeed
         }
         _groupInfoCount = infoIdx
     }
@@ -286,6 +308,9 @@ class RainSimulation(
         val startedAt = progress?.let { now - (durationMs * it).toLong() } ?: now
         val (xPos, yPos) = computeSpawnPosition(slot.laneIndex, progress)
         slot.hasCollided = false
+        slot.splashStartedAtStep = 0L
+        slot.splashSeed = ++nextSplashSeed
+        slot.splashDurationSeconds = RainSplashAppearance.durationSeconds(slot.splashSeed)
         slot.group = createGroup(xPos, yPos, slot)
         slot.startedAtMs = startedAt
         slot.durationMs = durationMs

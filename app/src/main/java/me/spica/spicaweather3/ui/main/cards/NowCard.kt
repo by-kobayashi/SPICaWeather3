@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -68,7 +69,13 @@ fun NowCard(modifier: Modifier = Modifier, weatherData: WeatherData, startAnim: 
 
 
     // 根据天气图标ID计算对应的天气动画类型（晴天、雨天、雪天等）
-    val currentWeatherAnimType = WeatherAnimType.RainDark
+    val currentWeatherAnimType = remember(weatherData) {
+        derivedStateOf {
+            WeatherAnimType.getAnimType(
+                weatherData.current.icon,
+            )
+        }
+    }.value
 
     // ==================== 动画配置 ====================
     // 温度数字动画（无延迟，持续450ms）
