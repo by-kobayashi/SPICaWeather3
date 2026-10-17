@@ -4,12 +4,7 @@ import android.os.Handler
 import android.os.Looper
 import android.os.MessageQueue
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.composed
-import com.baidu.location.LocationClient
-import me.spica.spicaweather3.App
 
 
 fun doOnMainThreadIdle(
@@ -55,12 +50,10 @@ fun doOnMainThreadIdle(
 
 fun Modifier.noRippleClickable(
   onClick: () -> Unit
-): Modifier = composed {
-  clickable(
-    indication = null,
-    interactionSource = remember { MutableInteractionSource() }) {
-    onClick()
-  }
-}
+): Modifier = clickable(
+  indication = null,
+  interactionSource = null,
+  onClick = onClick
+)
 
 

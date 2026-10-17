@@ -2,13 +2,13 @@ package me.spica.spicaweather3.ui.widget
 
 import androidx.compose.animation.Animatable
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import kotlinx.coroutines.launch
 import androidx.compose.ui.geometry.Rect
@@ -21,8 +21,6 @@ import me.spica.spicaweather3.ui.widget.rain.RainView
 import me.spica.spicaweather3.ui.widget.rain.RainTextCollision
 import me.spica.spicaweather3.ui.widget.snow.SnowView
 import me.spica.spicaweather3.ui.widget.sun.SunView
-import me.spica.spicaweather3.utils.navSharedBounds
-import me.spica.spicaweather3.utils.navSharedElement
 
 
 @Composable
@@ -35,8 +33,8 @@ fun WeatherBackground(
   textCollisions: List<RainTextCollision> = emptyList(),
 ) {
 
-  val currentTopColor = remember { Animatable(WeatherAnimType.RainLight.topColor) }
-  val currentBottomColor = remember { Animatable(WeatherAnimType.RainLight.bottomColor) }
+  val currentTopColor = remember { Animatable(currentWeatherType.topColor) }
+  val currentBottomColor = remember { Animatable(currentWeatherType.bottomColor) }
 
   LaunchedEffect(currentWeatherType) {
     launch {
@@ -50,17 +48,18 @@ fun WeatherBackground(
   Box(
     modifier = Modifier
       .fillMaxSize()
-      .background(
-        // 渐变色的绘制视线
-        brush = Brush.verticalGradient(
-          colors = listOf(
-            currentTopColor.value,
-            currentTopColor.value,
-            currentTopColor.value,
-            currentBottomColor.value
+      .drawBehind {
+        drawRect(
+          brush = Brush.verticalGradient(
+            colors = listOf(
+              currentTopColor.value,
+              currentTopColor.value,
+              currentTopColor.value,
+              currentBottomColor.value
+            )
           )
         )
-      )
+      }
   ) {
     GalaxyView(collapsedFraction, currentWeatherType.showGalaxy)
     SnowView(show = currentWeatherType.showSnow)

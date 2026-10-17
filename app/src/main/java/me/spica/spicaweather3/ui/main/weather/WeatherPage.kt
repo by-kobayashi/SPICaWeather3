@@ -57,7 +57,7 @@ fun WeatherPage(
     weatherState,
     modifier = modifier,
     label = "WeatherPage",
-    contentKey = { it },
+    contentKey = { it.city.id to (it is WeatherPageState.Data) },
   ) { state ->
     when (state) {
       is WeatherPageState.Data -> {

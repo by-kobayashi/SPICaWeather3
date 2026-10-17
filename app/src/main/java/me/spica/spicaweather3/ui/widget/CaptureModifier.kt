@@ -1,23 +1,25 @@
 package me.spica.spicaweather3.ui.widget
 
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.composed
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.drawscope.ContentDrawScope
+import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
-import androidx.compose.ui.graphics.rememberGraphicsLayer
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.input.pointer.SuspendingPointerInputModifierNode
+import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.node.CompositionLocalConsumerModifierNode
+import androidx.compose.ui.node.DelegatingNode
+import androidx.compose.ui.node.DrawModifierNode
+import androidx.compose.ui.node.GlobalPositionAwareModifierNode
+import androidx.compose.ui.node.ModifierNodeElement
+import androidx.compose.ui.node.currentValueOf
+import androidx.compose.ui.node.invalidateDraw
+import androidx.compose.ui.node.requireGraphicsContext
+import androidx.compose.ui.platform.InspectorInfo
 import androidx.compose.ui.unit.IntSize
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 /**
@@ -52,73 +54,16 @@ import kotlinx.coroutines.launch
  * @param onLongClick 是否使用长按触发（默认为 false，使用点击触发）
  * @param enabled 是否启用（默认为 true）
  */
-@Composable
 fun Modifier.captureToDropdownMenu(
   items: List<DropdownMenuItem>,
   onLongClick: Boolean = false,
   enabled: Boolean = true
-): Modifier = composed {
+): Modifier {
   if (!enabled || items.isEmpty()) {
-    return@composed this
+    return this
   }
 
-  val controller = LocalDropdownMenuController.current
-  val coroutineScope = rememberCoroutineScope()
-  val graphicsLayer = rememberGraphicsLayer()
-  
-  var targetOffset by remember { mutableStateOf(Offset.Zero) }
-  var targetSize by remember { mutableStateOf(IntSize.Zero) }
-
-  this
-    // 使用 GraphicsLayer 以支持截图
-    .drawWithContent {
-      graphicsLayer.record {
-        this@drawWithContent.drawContent()
-      }
-      drawLayer(graphicsLayer)
-    }
-    // 记录组件位置和尺寸
-    .onGloballyPositioned { coordinates ->
-      targetOffset = coordinates.positionInWindow()
-      targetSize = coordinates.size
-    }
-    // 处理点击事件
-    .pointerInput(items, onLongClick) {
-      detectTapGestures(
-        onTap = if (!onLongClick) {
-          {
-            coroutineScope.launch {
-              // 捕获当前 GraphicsLayer 的图像
-              val bitmap = graphicsLayer.toImageBitmap()
-              
-              // 显示下拉菜单
-              controller.show(
-                bitmap = bitmap,
-                offset = targetOffset,
-                size = targetSize,
-                items = items
-              )
-            }
-          }
-        } else null,
-        onLongPress = if (onLongClick) {
-          {
-            coroutineScope.launch {
-              // 捕获当前 GraphicsLayer 的图像
-              val bitmap = graphicsLayer.toImageBitmap()
-              
-              // 显示下拉菜单
-              controller.show(
-                bitmap = bitmap,
-                offset = targetOffset,
-                size = targetSize,
-                items = items
-              )
-            }
-          }
-        } else null
-      )
-    }
+  return this then CaptureDropdownMenuElement(items, null, onLongClick)
 }
 
 /**
@@ -153,68 +98,123 @@ fun Modifier.captureToDropdownMenu(
  * @param onLongClick 是否使用长按触发（默认为 false）
  * @param enabled 是否启用（默认为 true）
  */
-@Composable
 fun Modifier.captureToDropdownMenuDynamic(
   itemsProvider: () -> List<DropdownMenuItem>,
   onLongClick: Boolean = false,
   enabled: Boolean = true
-): Modifier = composed {
+): Modifier {
   if (!enabled) {
-    return@composed this
+    return this
   }
 
-  val controller = LocalDropdownMenuController.current
-  val coroutineScope = rememberCoroutineScope()
-  val graphicsLayer = rememberGraphicsLayer()
-  
-  var targetOffset by remember { mutableStateOf(Offset.Zero) }
-  var targetSize by remember { mutableStateOf(IntSize.Zero) }
+  return this then CaptureDropdownMenuElement(emptyList(), itemsProvider, onLongClick)
+}
 
-  this
-    .drawWithContent {
-      graphicsLayer.record {
-        this@drawWithContent.drawContent()
+private data class CaptureDropdownMenuElement(
+  val items: List<DropdownMenuItem>,
+  val itemsProvider: (() -> List<DropdownMenuItem>)?,
+  val onLongClick: Boolean
+) : ModifierNodeElement<CaptureDropdownMenuNode>() {
+  override fun create() = CaptureDropdownMenuNode(items, itemsProvider, onLongClick)
+
+  override fun update(node: CaptureDropdownMenuNode) {
+    node.update(items, itemsProvider, onLongClick)
+  }
+
+  override fun InspectorInfo.inspectableProperties() {
+    name = if (itemsProvider == null) "captureToDropdownMenu" else "captureToDropdownMenuDynamic"
+    properties["items"] = items
+    properties["itemsProvider"] = itemsProvider
+    properties["onLongClick"] = onLongClick
+  }
+}
+
+private class CaptureDropdownMenuNode(
+  private var items: List<DropdownMenuItem>,
+  private var itemsProvider: (() -> List<DropdownMenuItem>)?,
+  private var onLongClick: Boolean
+) : DelegatingNode(), DrawModifierNode, GlobalPositionAwareModifierNode,
+  CompositionLocalConsumerModifierNode {
+  private var graphicsLayer: GraphicsLayer? = null
+  private var hasRecordedContent = false
+  private var targetOffset = Offset.Zero
+  private var targetSize = IntSize.Zero
+  private var captureJob: Job? = null
+  private val pointerInput = delegate(
+    SuspendingPointerInputModifierNode {
+      if (onLongClick) {
+        detectTapGestures(onLongPress = { showMenu() })
+      } else {
+        detectTapGestures(onTap = { showMenu() })
       }
-      drawLayer(graphicsLayer)
     }
-    .onGloballyPositioned { coordinates ->
-      targetOffset = coordinates.positionInWindow()
-      targetSize = coordinates.size
+  )
+
+  fun update(
+    items: List<DropdownMenuItem>,
+    itemsProvider: (() -> List<DropdownMenuItem>)?,
+    onLongClick: Boolean
+  ) {
+    val resetInput = this.onLongClick != onLongClick || this.items != items
+    this.items = items
+    this.itemsProvider = itemsProvider
+    this.onLongClick = onLongClick
+    if (resetInput) {
+      pointerInput.resetPointerInputHandler()
     }
-    .pointerInput(onLongClick) {
-      detectTapGestures(
-        onTap = if (!onLongClick) {
-          {
-            val items = itemsProvider()
-            if (items.isNotEmpty()) {
-              coroutineScope.launch {
-                val bitmap = graphicsLayer.toImageBitmap()
-                controller.show(
-                  bitmap = bitmap,
-                  offset = targetOffset,
-                  size = targetSize,
-                  items = items
-                )
-              }
-            }
-          }
-        } else null,
-        onLongPress = if (onLongClick) {
-          {
-            val items = itemsProvider()
-            if (items.isNotEmpty()) {
-              coroutineScope.launch {
-                val bitmap = graphicsLayer.toImageBitmap()
-                controller.show(
-                  bitmap = bitmap,
-                  offset = targetOffset,
-                  size = targetSize,
-                  items = items
-                )
-              }
-            }
-          }
-        } else null
-      )
+  }
+
+  override fun onAttach() {
+    graphicsLayer = requireGraphicsContext().createGraphicsLayer()
+  }
+
+  override fun onDetach() {
+    resetCapture()
+    graphicsLayer?.let { requireGraphicsContext().releaseGraphicsLayer(it) }
+    graphicsLayer = null
+  }
+
+  override fun onReset() {
+    resetCapture()
+    pointerInput.resetPointerInputHandler()
+    invalidateDraw()
+  }
+
+  private fun resetCapture() {
+    captureJob?.cancel()
+    captureJob = null
+    hasRecordedContent = false
+    targetOffset = Offset.Zero
+    targetSize = IntSize.Zero
+  }
+
+  override fun ContentDrawScope.draw() {
+    val layer = graphicsLayer ?: return drawContent()
+    layer.record {
+      this@draw.drawContent()
     }
+    hasRecordedContent = true
+    drawLayer(layer)
+  }
+
+  override fun onGloballyPositioned(coordinates: LayoutCoordinates) {
+    targetOffset = coordinates.positionInWindow()
+    targetSize = coordinates.size
+  }
+
+  private fun showMenu() {
+    val layer = graphicsLayer ?: return
+    if (!hasRecordedContent || targetSize.width <= 0 || targetSize.height <= 0) return
+    val menuItems = itemsProvider?.invoke() ?: items
+    if (menuItems.isEmpty()) return
+
+    val controller = currentValueOf(LocalDropdownMenuController)
+    val offset = targetOffset
+    val size = targetSize
+    captureJob?.cancel()
+    captureJob = coroutineScope.launch {
+      val bitmap = layer.toImageBitmap()
+      controller.show(bitmap, offset, size, menuItems)
+    }
+  }
 }
