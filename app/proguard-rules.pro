@@ -26,6 +26,11 @@
 -dontskipnonpubliclibraryclasses
 -verbose
 
+# Glance 依赖类名区分组件，禁止合并和重命名。
+-keep class me.spica.spicaweather3.ui.app_widget.TodayInfoAppWidget { public <init>(); }
+-keep class me.spica.spicaweather3.ui.app_widget.WeeklyWeatherAppWidget { public <init>(); }
+-keep class me.spica.spicaweather3.ui.app_widget.ScatteredWeatherAppWidget { public <init>(); }
+
 # 移除日志
 -assumenosideeffects class android.util.Log {
     public static *** v(...);

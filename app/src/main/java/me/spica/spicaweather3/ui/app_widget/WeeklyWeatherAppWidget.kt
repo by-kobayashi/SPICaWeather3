@@ -1,15 +1,15 @@
 package me.spica.spicaweather3.ui.app_widget
 
-import android.annotation.SuppressLint
 import android.content.Context
-import android.util.Log
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.appwidget.GlanceAppWidget
+import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.cornerRadius
-import androidx.glance.appwidget.provideContent
+import androidx.glance.appwidget.lazy.LazyColumn
+import androidx.glance.appwidget.lazy.items
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
 import androidx.glance.layout.Column
@@ -23,9 +23,6 @@ import androidx.glance.layout.width
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import me.spica.spicaweather3.data.local.db.AppDatabase
 import me.spica.spicaweather3.presentation.theme.COLOR_WHITE_100
 import me.spica.spicaweather3.presentation.theme.COLOR_WHITE_40
 import me.spica.spicaweather3.presentation.theme.COLOR_WHITE_60
@@ -36,23 +33,17 @@ import me.spica.spicaweather3.presentation.theme.COLOR_WHITE_60
  */
 class WeeklyWeatherAppWidget : GlanceAppWidget() {
 
-  @SuppressLint("RestrictedApi")
+  override val sizeMode = SizeMode.Exact
   override suspend fun provideGlance(
     context: Context,
     id: GlanceId
-  ) = withContext(Dispatchers.IO) {
-    val database = AppDatabase.build(context)
-
-    // 获取用户位置的天气数据
-    val cityEntity = database.cityDao().getUserLoc()
-    val weatherData = cityEntity?.weather
-    // Gson 可能把 non-null 的 current/forecast/next7Days 置为 null（旧数据缺少字段），单独取出并校验
-    val current = weatherData?.current
-    val weeklyWeather = weatherData?.forecast?.next7Days?.take(7)
-
-    Log.e("WeeklyWeatherAppWidget", "provideGlance: 更新一周天气小组件 $cityEntity")
-
-    provideContent {
+  ) {
+    provideWeatherContent { cityEntity ->
+      val weatherData = cityEntity?.weather
+      val current = weatherData?.current
+      val weeklyWeather = weatherData?.forecast?.next7Days.orEmpty()
+        .filterNotNull().filter { !it.date.isNullOrBlank() }.distinctBy { it.date }.take(7)
+      val compact = widgetHeight() < 270f
       Box(
         modifier = GlanceModifier
           .fillMaxSize()
@@ -60,7 +51,7 @@ class WeeklyWeatherAppWidget : GlanceAppWidget() {
           .padding(16.dp),
         contentAlignment = Alignment.TopStart
       ) {
-        if (cityEntity != null && weatherData != null && current != null && weeklyWeather != null) {
+        if (cityEntity != null && current != null) {
           Column(
             modifier = GlanceModifier.fillMaxSize(),
             verticalAlignment = Alignment.Top,
@@ -76,16 +67,17 @@ class WeeklyWeatherAppWidget : GlanceAppWidget() {
                 Text(
                   text = cityEntity.name,
                   style = TextStyle(
-                    fontSize = 18.sp,
+                    fontSize = if (compact) 16.sp else 18.sp,
                     color = ColorProvider(COLOR_WHITE_100)
-                  )
+                  ),
+                  maxLines = 1
                 )
                 Spacer(modifier = GlanceModifier.height(2.dp))
                 Row {
                   Text(
                     text = "${current.temperature}",
                     style = TextStyle(
-                      fontSize = 32.sp,
+                      fontSize = if (compact) 24.sp else 32.sp,
                       color = ColorProvider(COLOR_WHITE_100)
                     )
                   )
@@ -100,15 +92,14 @@ class WeeklyWeatherAppWidget : GlanceAppWidget() {
               }
             }
 
-            Spacer(modifier = GlanceModifier.height(12.dp))
+            Spacer(modifier = GlanceModifier.height(if (compact) 8.dp else 12.dp))
 
             // 一周天气列表
             if (weeklyWeather.isNotEmpty()) {
-              Column(
-                modifier = GlanceModifier.fillMaxWidth(),
-                verticalAlignment = Alignment.Top
+              LazyColumn(
+                modifier = GlanceModifier.fillMaxWidth().defaultWeight()
               ) {
-                weeklyWeather.forEach { day ->
+                items(weeklyWeather, itemId = { it.date.orEmpty().hashCode().toLong() }) { day ->
                   Row(
                     modifier = GlanceModifier
                       .fillMaxWidth()
@@ -125,7 +116,7 @@ class WeeklyWeatherAppWidget : GlanceAppWidget() {
                     }
                     
                     Box(
-                      modifier = GlanceModifier.width(50.dp),
+                      modifier = GlanceModifier.width(44.dp),
                       contentAlignment = Alignment.CenterStart
                     ) {
                       Text(
@@ -137,9 +128,8 @@ class WeeklyWeatherAppWidget : GlanceAppWidget() {
                       )
                     }
 
-                    // 天气描述 - 固定宽度
                     Box(
-                      modifier = GlanceModifier.width(80.dp),
+                      modifier = GlanceModifier.defaultWeight(),
                       contentAlignment = Alignment.CenterStart
                     ) {
                       Text(
@@ -147,13 +137,14 @@ class WeeklyWeatherAppWidget : GlanceAppWidget() {
                         style = TextStyle(
                           fontSize = 12.sp,
                           color = ColorProvider(COLOR_WHITE_40)
-                        )
+                        ),
+                        maxLines = 1
                       )
                     }
 
                     // 温度范围 - 右对齐
                     Box(
-                      modifier = GlanceModifier.defaultWeight(),
+                      modifier = GlanceModifier,
                       contentAlignment = Alignment.CenterEnd
                     ) {
                       Text(

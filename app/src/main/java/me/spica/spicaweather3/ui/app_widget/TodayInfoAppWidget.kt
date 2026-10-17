@@ -1,15 +1,13 @@
 package me.spica.spicaweather3.ui.app_widget
 
-import android.annotation.SuppressLint
 import android.content.Context
-import android.util.Log
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.appwidget.GlanceAppWidget
+import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.cornerRadius
-import androidx.glance.appwidget.provideContent
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
 import androidx.glance.layout.Column
@@ -21,9 +19,6 @@ import androidx.glance.layout.padding
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import me.spica.spicaweather3.data.local.db.AppDatabase
 import me.spica.spicaweather3.presentation.theme.COLOR_WHITE_100
 import me.spica.spicaweather3.presentation.theme.COLOR_WHITE_40
 
@@ -34,23 +29,16 @@ import me.spica.spicaweather3.presentation.theme.COLOR_WHITE_40
  */
 class TodayInfoAppWidget : GlanceAppWidget() {
 
-  @SuppressLint("RestrictedApi")
+  override val sizeMode = SizeMode.Exact
   override suspend fun provideGlance(
     context: Context,
     id: GlanceId
-  ) = withContext(Dispatchers.IO) {
-    val database = AppDatabase.build(context)
-
-    // 获取用户位置的天气数据
-    val cityEntity = database.cityDao().getUserLoc()
-
-    val weatherData = cityEntity?.weather
-    // Gson 可能把 non-null 的 current 置为 null（旧数据缺少字段），单独取出并校验
-    val current = weatherData?.current
-
-    Log.e("TodayInfoAppWidget", "provideGlance: 更新小组件 $cityEntity $weatherData")
-
-    provideContent {
+  ) {
+    provideWeatherContent { cityEntity ->
+      val weatherData = cityEntity?.weather
+      val current = weatherData?.current
+      val compact = widgetHeight() < 150f
+      val minimal = widgetHeight() < 110f
       Box(
         modifier = GlanceModifier
           .fillMaxSize()
@@ -72,9 +60,10 @@ class TodayInfoAppWidget : GlanceAppWidget() {
                 text = cityEntity.name,
                 modifier = GlanceModifier,
                 TextStyle(
-                  fontSize = 24.sp,
+                  fontSize = if (minimal) 14.sp else if (compact) 20.sp else 24.sp,
                   color = ColorProvider(COLOR_WHITE_100)
-                )
+                ),
+                maxLines = 1
               )
               Spacer(
                 modifier = GlanceModifier
@@ -85,7 +74,7 @@ class TodayInfoAppWidget : GlanceAppWidget() {
                   text = "${current.temperature}",
                   modifier = GlanceModifier,
                   style = TextStyle(
-                    fontSize = 54.sp,
+                    fontSize = if (minimal) 22.sp else if (compact) 36.sp else 54.sp,
                     color = ColorProvider(COLOR_WHITE_100)
                   )
                 )
@@ -93,23 +82,25 @@ class TodayInfoAppWidget : GlanceAppWidget() {
                   text = "°C",
                   modifier = GlanceModifier,
                   style = TextStyle(
-                    fontSize = 24.sp,
+                    fontSize = if (minimal) 12.sp else if (compact) 16.sp else 24.sp,
                     color = ColorProvider(COLOR_WHITE_100)
                   )
                 )
               }
-              Spacer(
-                modifier = GlanceModifier
-                  .height(4.dp)
-              )
-              Text(
-                text = "${current.condition.orEmpty()} 风速${current.windSpeed}公里/小时",
-                modifier = GlanceModifier,
-                style = TextStyle(
-                  fontSize = 14.sp,
-                  color = ColorProvider(COLOR_WHITE_40)
+              if (!minimal) {
+                Spacer(
+                  modifier = GlanceModifier.height(4.dp)
                 )
-              )
+                Text(
+                  text = "${current.condition.orEmpty()} 风速${current.windSpeed}公里/小时",
+                  modifier = GlanceModifier,
+                  style = TextStyle(
+                    fontSize = if (compact) 12.sp else 14.sp,
+                    color = ColorProvider(COLOR_WHITE_40)
+                  ),
+                  maxLines = 1
+                )
+              }
             }
           }
         } else {
@@ -117,7 +108,7 @@ class TodayInfoAppWidget : GlanceAppWidget() {
             text = "没有数据 0_0",
             modifier = GlanceModifier,
             style = TextStyle(
-              fontSize = 32.sp,
+              fontSize = if (compact) 16.sp else 32.sp,
               color = ColorProvider(COLOR_WHITE_100)
             )
           )

@@ -1,3 +1,4 @@
+import com.android.build.api.artifact.SingleArtifact
 import org.gradle.kotlin.dsl.implementation
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Properties
@@ -17,7 +18,8 @@ android {
 
 
     defaultConfig {
-        applicationId = "me.spica.spicaweather3"
+        applicationId = "me.spica.spicaweather3" +
+            if (providers.gradleProperty("widgetVerification").isPresent) ".widgetverification" else ""
         minSdk = 31
         targetSdk = 36
         versionCode = 2
@@ -167,4 +169,23 @@ dependencies {
     implementation(libs.androidx.glance)
     implementation(libs.androidx.glance.appwidget)
     implementation(libs.androidx.work.runtime.ktx)
+}
+
+androidComponents.onVariants(androidComponents.selector().withBuildType("release")) { variant ->
+    val variantName = variant.name.replaceFirstChar { it.uppercase() }
+    val mapping = variant.artifacts.get(SingleArtifact.OBFUSCATION_MAPPING_FILE)
+    val verifyWidgetTypes = tasks.register("verify${variantName}WidgetTypes") {
+        group = "verification"
+        inputs.file(mapping)
+        doLast {
+            val names = listOf("TodayInfoAppWidget", "WeeklyWeatherAppWidget", "ScatteredWeatherAppWidget")
+                .map { "me.spica.spicaweather3.ui.app_widget.$it" }
+            val expected = names.map { "$it -> $it:" }.toSet()
+            val actual = mapping.get().asFile.useLines { lines -> lines.filter { it in expected }.toSet() }
+            check(actual == expected) { "小组件实现类被合并、移除或重命名，请检查 R8 保留规则" }
+        }
+    }
+    tasks.matching { it.name == "assemble$variantName" }.configureEach {
+        dependsOn(verifyWidgetTypes)
+    }
 }

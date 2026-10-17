@@ -19,6 +19,7 @@
 
   <!-- Error & status messages -->
   <string name="error_request_failed">Request failed</string>
+  <string name="error_partial_weather_refresh">Could not refresh all cities (%1$d failed). Previous data was kept.</string>
   <string name="location_failed_with_code">Location failed, code %1$s</string>
   <string name="empty_state_no_data">No data</string>
   <string name="sunrise_no_data">No data yet</string>

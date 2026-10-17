@@ -1,9 +1,6 @@
 package me.spica.spicaweather3.data.repository
 
 import com.skydoves.sandwich.getOrNull
-import com.skydoves.sandwich.message
-import com.skydoves.sandwich.onFailure
-import com.skydoves.sandwich.onSuccess
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -70,12 +67,13 @@ class WeatherRepositoryImpl(
             return@withContext
         }
 
-        val weatherData = response.data.results.firstOrNull()
-        if (weatherData != null && weatherData.success) {
-            // 使用 copy 替代直接修改，避免可变性问题
-            val updatedEntity = cityEntity.copy(weather = weatherData.data)
-            cityDao.insert(updatedEntity)
-            WidgetUpdateHelper.updateAllWidgets(App.instance)
+        val weatherData = response.data.results.orEmpty().filterNotNull().find { it.locationId == cityEntity.id }
+        val freshWeather = weatherData?.data
+        if (weatherData?.success == true && freshWeather?.current != null) {
+            if (cityEntity.weather != freshWeather) {
+                val updated = cityDao.updateWeather(cityEntity.id, lat, lon, freshWeather)
+                if (updated > 0 && cityEntity.isUserLoc) WidgetUpdateHelper.requestUpdate(App.instance)
+            }
             onSucceed()
         } else {
             onError(stringProvider.getString(R.string.error_request_failed))
@@ -87,8 +85,12 @@ class WeatherRepositoryImpl(
         onError: (String?) -> Unit,
         onSucceed: () -> Unit
     ) = withContext(Dispatchers.IO) {
-        // 转换为 Entity 以访问数据层方法
-        val cityEntities = cities.map { it.toEntity() }
+        val requestedIds = cities.map { it.id }.toSet()
+        val cityEntities = cityDao.getAll().filter { it.id in requestedIds }
+        if (cityEntities.isEmpty()) {
+            onSucceed()
+            return@withContext
+        }
         
         val response = apiService.getWeather(
             BatchWeatherRequest(cityEntities.map { it.toWeatherRequestLocation() })
@@ -104,19 +106,26 @@ class WeatherRepositoryImpl(
             return@withContext
         }
 
-        // 创建更新后的实体列表
-        val updatedEntities = cityEntities.map { entity ->
-            val weatherData = response.data.results.find { it.locationId == entity.id }
-            if (weatherData != null && weatherData.success) {
-                entity.copy(weather = weatherData.data)
-            } else {
-                entity
-            }
+        val results = response.data.results.orEmpty().filterNotNull().associateBy { it.locationId }
+        var failedCount = 0
+        val updatedEntities = cityEntities.mapNotNull { entity ->
+            val result = results[entity.id]
+            val freshWeather = result?.data
+            if (result?.success != true || freshWeather?.current == null) {
+                failedCount++
+                null
+            } else if (entity.weather != freshWeather) {
+                entity.copy(weather = freshWeather)
+            } else null
         }
 
-        cityDao.insertAll(updatedEntities)
-        WidgetUpdateHelper.updateAllWidgets(App.instance)
-        onSucceed()
+        if (updatedEntities.isNotEmpty()) cityDao.updateWeather(updatedEntities)
+        if (updatedEntities.any { it.isUserLoc }) WidgetUpdateHelper.requestUpdate(App.instance)
+        if (failedCount > 0) {
+            onError(stringProvider.getString(R.string.error_partial_weather_refresh, failedCount))
+        } else {
+            onSucceed()
+        }
     }
 
     override suspend fun insertCity(city: City) = withContext(Dispatchers.IO) {
@@ -125,6 +134,7 @@ class WeatherRepositoryImpl(
 
     override suspend fun deleteCity(city: City) = withContext(Dispatchers.IO) {
         cityDao.delete(city.toEntity())
+        if (city.isUserLocation) WidgetUpdateHelper.requestUpdate(App.instance)
     }
 
     override suspend fun swapSort(city1: City, city2: City) =
@@ -137,6 +147,6 @@ class WeatherRepositoryImpl(
     }
 
     override suspend fun insertUserLoc(city: City) = withContext(Dispatchers.IO) {
-        cityDao.updateUserLoc(city.toEntity())
+        if (cityDao.updateUserLoc(city.toEntity())) WidgetUpdateHelper.requestUpdate(App.instance)
     }
 }

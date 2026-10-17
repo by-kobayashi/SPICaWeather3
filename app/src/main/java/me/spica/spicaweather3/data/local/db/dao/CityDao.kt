@@ -6,8 +6,11 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy.Companion.REPLACE
 import androidx.room.Query
 import androidx.room.Transaction
+import androidx.room.TypeConverters
 import kotlinx.coroutines.flow.Flow
 import me.spica.spicaweather3.data.local.db.entity.CityEntity
+import me.spica.spicaweather3.data.local.db.type_converter.RoomTypeConverters
+import me.spica.spicaweather3.data.remote.api.model.weather.AggregatedWeatherData
 
 @Dao
 interface CityDao {
@@ -17,6 +20,20 @@ interface CityDao {
 
   @Query("SELECT * FROM cityentity WHERE isUserLoc = 1 LIMIT 1")
   fun getUserLoc(): CityEntity?
+
+  @Query("SELECT * FROM cityentity WHERE isUserLoc = 1 LIMIT 1")
+  fun getUserLocFlow(): Flow<CityEntity?>
+
+  @TypeConverters(RoomTypeConverters::class)
+  @Query("UPDATE cityentity SET weather = :weather WHERE id = :id AND lat = :lat AND lon = :lon")
+  fun updateWeather(id: String, lat: String, lon: String, weather: AggregatedWeatherData): Int
+
+  @Transaction
+  fun updateWeather(cities: List<CityEntity>) {
+    cities.forEach { city ->
+      city.weather?.let { updateWeather(city.id, city.lat, city.lon, it) }
+    }
+  }
 
   @Query("SELECT * FROM cityentity ORDER by sort ASC")
   fun getAllFlow(): Flow<List<CityEntity>>
@@ -36,11 +53,12 @@ interface CityDao {
   }
 
   @Transaction
-  fun updateUserLoc(cityEntity: CityEntity) {
+  fun updateUserLoc(cityEntity: CityEntity): Boolean {
     val userLoc = getUserLoc()
     if (userLoc == null) {
       cityEntity.isUserLoc = true
       insert(cityEntity)
+      return true
     } else {
       // 只有在数据真正改变时才更新，避免触发不必要的Flow更新
       var hasChanged = false
@@ -67,6 +85,7 @@ interface CityDao {
       if (hasChanged) {
         insert(userLoc)
       }
+      return hasChanged
     }
   }
 

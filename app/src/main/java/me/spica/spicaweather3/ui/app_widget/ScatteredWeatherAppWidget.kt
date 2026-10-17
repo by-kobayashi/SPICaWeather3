@@ -1,6 +1,5 @@
 package me.spica.spicaweather3.ui.app_widget
 
-import android.annotation.SuppressLint
 import android.content.Context
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -8,8 +7,8 @@ import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.appwidget.GlanceAppWidget
+import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.cornerRadius
-import androidx.glance.appwidget.provideContent
 import androidx.glance.background
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
@@ -20,15 +19,11 @@ import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
-import androidx.glance.layout.width
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import me.spica.spicaweather3.data.local.db.AppDatabase
 import me.spica.spicaweather3.presentation.theme.COLOR_WHITE_10
 import me.spica.spicaweather3.presentation.theme.COLOR_WHITE_100
 import me.spica.spicaweather3.presentation.theme.COLOR_WHITE_40
@@ -38,107 +33,64 @@ import me.spica.spicaweather3.presentation.theme.COLOR_WHITE_70
 import me.spica.spicaweather3.presentation.theme.COLOR_WHITE_80
 import me.spica.spicaweather3.presentation.theme.COLOR_WHITE_90
 
-/**
- * 散排天气小组件
- */
+/** 散排天气小组件 */
 class ScatteredWeatherAppWidget : GlanceAppWidget() {
+    override val sizeMode = SizeMode.Exact
 
-    @SuppressLint("RestrictedApi")
-    override suspend fun provideGlance(
-        context: Context,
-        id: GlanceId
-    ) = withContext(Dispatchers.IO) {
-        val database = AppDatabase.build(context)
-
-        val cityEntity = database.cityDao().getUserLoc()
-        val weatherData = cityEntity?.weather
-        // Gson 可能把 non-null 的 current/forecast.today/airQuality 置为 null（旧数据缺少字段），单独取出并校验
-        val current = weatherData?.current
-        val today = weatherData?.forecast?.today
-        val airQuality = weatherData?.airQuality
-
-        provideContent {
+    override suspend fun provideGlance(context: Context, id: GlanceId) {
+        provideWeatherContent { city ->
+            val current = city?.weather?.current
+            val today = city?.weather?.forecast?.today
+            val height = widgetHeight()
+            val compact = height < 200f
+            val minimal = height < 100f
             Box(
-                modifier = GlanceModifier
-                    .fillMaxSize()
-                    .cornerRadius(20.dp)
+                modifier = GlanceModifier.fillMaxSize().cornerRadius(20.dp)
                     .background(Color(0xCC1B2838))
             ) {
-                if (cityEntity != null && weatherData != null && current != null && today != null && airQuality != null) {
-                    val temp = current.temperature
-                    val condition = current.condition.orEmpty()
-                    val humidity = current.humidity
-                    val windScale = current.windScale.orEmpty()
-                    val windDirText = current.windDirectionText.orEmpty()
-                    val feelsLike = current.feelsLike
-                    val tempMax = today.tempMax
-                    val tempMin = today.tempMin
-                    val sunrise = today.sunrise.orEmpty()
-                    val sunset = today.sunset.orEmpty()
-                    val aqiCategory = airQuality.category.orEmpty()
-                    val cityName = cityEntity.name
-
-                    // 层1：幽灵背景大字（仅 10% 不透明度）——营造视觉纵深
+                if (city != null && current != null) {
                     Box(
                         modifier = GlanceModifier.fillMaxSize(),
                         contentAlignment = Alignment.BottomEnd
                     ) {
                         Text(
-                            text = "$temp",
+                            text = "${current.temperature}",
                             modifier = GlanceModifier.padding(end = 4.dp, bottom = 2.dp),
                             style = TextStyle(
-                                fontSize = 112.sp,
+                                fontSize = if (compact) 64.sp else 112.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = ColorProvider(COLOR_WHITE_10)
                             )
                         )
                     }
-
-                    // 层2：主要内容
                     Column(
-                        modifier = GlanceModifier
-                            .fillMaxSize()
-                            .padding(horizontal = 16.dp, vertical = 14.dp),
-                        verticalAlignment = Alignment.Top,
-                        horizontalAlignment = Alignment.Start
+                        modifier = GlanceModifier.fillMaxSize()
+                            .padding(horizontal = 16.dp, vertical = if (compact) 8.dp else 14.dp),
+                        verticalAlignment = Alignment.Top
                     ) {
-                        // ── 第一行：城市名（左） + 温度区间（右） ──
-                        Row(
-                            modifier = GlanceModifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalAlignment = Alignment.Start
-                        ) {
+                        Row(modifier = GlanceModifier.fillMaxWidth()) {
                             Text(
-                                text = cityName,
-                                style = TextStyle(
-                                    fontSize = 14.sp,
-                                    color = ColorProvider(COLOR_WHITE_70)
-                                )
+                                text = city.name,
+                                modifier = GlanceModifier.defaultWeight(),
+                                style = TextStyle(fontSize = 14.sp, color = ColorProvider(COLOR_WHITE_70)),
+                                maxLines = 1
                             )
-                            Spacer(GlanceModifier.defaultWeight())
                             Text(
-                                text = "${tempMax}°~${tempMin}°",
-                                style = TextStyle(
-                                    fontSize = 12.sp,
-                                    color = ColorProvider(COLOR_WHITE_50)
-                                )
+                                text = today?.let { "${it.tempMax}°~${it.tempMin}°" } ?: "—",
+                                style = TextStyle(fontSize = 12.sp, color = ColorProvider(COLOR_WHITE_50)),
+                                maxLines = 1
                             )
                         }
-
                         Spacer(GlanceModifier.height(6.dp))
-
-                        // ── 第二行：大温度（左下对齐） + 条件详情（右） ──
                         Row(
                             modifier = GlanceModifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.Bottom,
-                            horizontalAlignment = Alignment.Start
+                            verticalAlignment = Alignment.Bottom
                         ) {
-                            // 左侧：超大温度数字
                             Row(verticalAlignment = Alignment.Bottom) {
                                 Text(
-                                    text = "$temp",
+                                    text = "${current.temperature}",
                                     style = TextStyle(
-                                        fontSize = 64.sp,
+                                        fontSize = if (minimal) 24.sp else if (compact) 36.sp else 64.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = ColorProvider(COLOR_WHITE_100)
                                     )
@@ -147,124 +99,73 @@ class ScatteredWeatherAppWidget : GlanceAppWidget() {
                                     text = "°",
                                     modifier = GlanceModifier.padding(bottom = 10.dp),
                                     style = TextStyle(
-                                        fontSize = 22.sp,
+                                        fontSize = if (compact) 16.sp else 22.sp,
                                         color = ColorProvider(COLOR_WHITE_80)
                                     )
                                 )
                             }
-
                             Spacer(GlanceModifier.defaultWeight())
-
-                            // 右侧：天气条件 + 细节（底部对齐）
-                            Column(
-                                horizontalAlignment = Alignment.End
-                            ) {
+                            Column(horizontalAlignment = Alignment.End) {
                                 Text(
-                                    text = condition,
+                                    text = current.condition.orEmpty(),
                                     style = TextStyle(
-                                        fontSize = 22.sp,
+                                        fontSize = if (compact) 16.sp else 22.sp,
                                         fontWeight = FontWeight.Medium,
                                         color = ColorProvider(COLOR_WHITE_90),
                                         textAlign = TextAlign.End
-                                    )
+                                    ),
+                                    maxLines = 1
                                 )
-                                Spacer(GlanceModifier.height(4.dp))
-                                Text(
-                                    text = "湿度 $humidity%",
-                                    style = TextStyle(
-                                        fontSize = 11.sp,
-                                        color = ColorProvider(COLOR_WHITE_50),
-                                        textAlign = TextAlign.End
+                                if (!minimal) {
+                                    Spacer(GlanceModifier.height(4.dp))
+                                    Text(
+                                        text = "湿度 ${current.humidity}%",
+                                        style = TextStyle(fontSize = 11.sp, color = ColorProvider(COLOR_WHITE_50))
                                     )
-                                )
-                                Text(
-                                    text = "$windDirText ${windScale}级",
-                                    style = TextStyle(
-                                        fontSize = 11.sp,
-                                        color = ColorProvider(COLOR_WHITE_50),
-                                        textAlign = TextAlign.End
+                                }
+                                if (!compact) {
+                                    Text(
+                                        text = "${current.windDirectionText.orEmpty()} ${current.windScale.orEmpty()}级",
+                                        style = TextStyle(fontSize = 11.sp, color = ColorProvider(COLOR_WHITE_50))
                                     )
-                                )
-                                Text(
-                                    text = "空气 $aqiCategory",
-                                    style = TextStyle(
-                                        fontSize = 11.sp,
-                                        color = ColorProvider(COLOR_WHITE_50),
-                                        textAlign = TextAlign.End
+                                    Text(
+                                        text = "空气 ${city.weather?.airQuality?.category.orEmpty().ifBlank { "暂无" }}",
+                                        style = TextStyle(fontSize = 11.sp, color = ColorProvider(COLOR_WHITE_50))
                                     )
-                                )
+                                }
                             }
                         }
-
-                        Spacer(GlanceModifier.height(6.dp))
-
-                        // ── 第三行：日出日落（左） + 体感（右） ──
-                        Row(
-                            modifier = GlanceModifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.Bottom,
-                            horizontalAlignment = Alignment.Start
-                        ) {
-                            // 日出日落两行
-                            Column {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(
-                                        text = "日出",
-                                        style = TextStyle(
-                                            fontSize = 10.sp,
-                                            color = ColorProvider(COLOR_WHITE_40)
+                        if (height >= 115f) {
+                            Spacer(GlanceModifier.height(6.dp))
+                            Row(
+                                modifier = GlanceModifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.Bottom
+                            ) {
+                                if (!compact) {
+                                    Column {
+                                        Text(
+                                            text = "日出 ${today?.sunrise.orEmpty().ifBlank { "—" }}",
+                                            style = TextStyle(fontSize = 10.sp, color = ColorProvider(COLOR_WHITE_60))
                                         )
-                                    )
-                                    Spacer(GlanceModifier.width(4.dp))
-                                    Text(
-                                        text = sunrise,
-                                        style = TextStyle(
-                                            fontSize = 10.sp,
-                                            color = ColorProvider(COLOR_WHITE_60)
+                                        Text(
+                                            text = "日落 ${today?.sunset.orEmpty().ifBlank { "—" }}",
+                                            style = TextStyle(fontSize = 10.sp, color = ColorProvider(COLOR_WHITE_60))
                                         )
-                                    )
+                                    }
                                 }
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(
-                                        text = "日落",
-                                        style = TextStyle(
-                                            fontSize = 10.sp,
-                                            color = ColorProvider(COLOR_WHITE_40)
-                                        )
-                                    )
-                                    Spacer(GlanceModifier.width(4.dp))
-                                    Text(
-                                        text = sunset,
-                                        style = TextStyle(
-                                            fontSize = 10.sp,
-                                            color = ColorProvider(COLOR_WHITE_60)
-                                        )
-                                    )
-                                }
-                            }
-
-                            Spacer(GlanceModifier.defaultWeight())
-
-                            Text(
-                                text = "体感 ${feelsLike}°",
-                                style = TextStyle(
-                                    fontSize = 10.sp,
-                                    color = ColorProvider(COLOR_WHITE_40)
+                                Spacer(GlanceModifier.defaultWeight())
+                                Text(
+                                    text = "体感 ${current.feelsLike}°",
+                                    style = TextStyle(fontSize = 10.sp, color = ColorProvider(COLOR_WHITE_40))
                                 )
-                            )
+                            }
                         }
                     }
                 } else {
-                    // 无数据占位
-                    Box(
-                        modifier = GlanceModifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
+                    Box(modifier = GlanceModifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(
                             text = "没有数据 0_0",
-                            style = TextStyle(
-                                fontSize = 20.sp,
-                                color = ColorProvider(COLOR_WHITE_60)
-                            )
+                            style = TextStyle(fontSize = 20.sp, color = ColorProvider(COLOR_WHITE_60))
                         )
                     }
                 }

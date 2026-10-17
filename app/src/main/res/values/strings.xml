@@ -19,6 +19,7 @@
 
   <!-- Error & status messages -->
   <string name="error_request_failed">请求失败</string>
+  <string name="error_partial_weather_refresh">%1$d 个城市天气更新失败，已保留原有数据</string>
   <string name="location_failed_with_code">定位失败，错误码 %1$s</string>
   <string name="empty_state_no_data">没有数据</string>
   <string name="sunrise_no_data">暂无数据</string>

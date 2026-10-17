@@ -3,6 +3,7 @@ package me.spica.spicaweather3.data.work
 import android.content.Context
 import android.util.Log
 import androidx.work.Constraints
+import androidx.work.BackoffPolicy
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
@@ -15,6 +16,7 @@ import org.koin.core.context.GlobalContext
 import java.time.Duration
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.CancellationException
 
 class WeatherRefreshWorker(
   appContext: Context,
@@ -22,31 +24,37 @@ class WeatherRefreshWorker(
 ) : CoroutineWorker(appContext, workerParams) {
 
   override suspend fun doWork(): Result {
-    val repository = GlobalContext.get().get<IWeatherRepository>()
-    val cities = repository.getAllCities()
+    return try {
+      val repository = GlobalContext.get().get<IWeatherRepository>()
+      val cities = repository.getAllCities().filter { it.requiresRefresh() }
 
-    if (cities.isEmpty()) {
-      return Result.success()
-    }
-
-    if (!cities.any { it.requiresRefresh() }) {
-      return Result.success()
-    }
-
-    var hasError = false
-    repository.refreshAllCitiesWeather(
-      cities = cities,
-      onError = {
-        hasError = true
-        Log.w(TAG, "Background weather refresh failed: $it")
-      },
-      onSucceed = {
-        hasError = false
+      if (cities.isEmpty()) {
+        return Result.success()
       }
-    )
 
-    return if (hasError) Result.retry() else Result.success()
+      var hasError = false
+      repository.refreshAllCitiesWeather(
+        cities = cities,
+        onError = {
+          hasError = true
+          Log.w(TAG, "后台天气更新失败：$it")
+        },
+        onSucceed = {
+          hasError = false
+        }
+      )
+
+      if (hasError) retryOrFail() else Result.success()
+    } catch (cancelled: CancellationException) {
+      throw cancelled
+    } catch (error: Exception) {
+      Log.e(TAG, "后台天气更新失败", error)
+      retryOrFail()
+    }
   }
+
+  private fun retryOrFail(): Result =
+    if (runAttemptCount < 2) Result.retry() else Result.failure()
 
   private fun City.requiresRefresh(): Boolean {
     val weatherData = weather ?: return true
@@ -70,6 +78,7 @@ object WeatherRefreshScheduler {
       WORK_INTERVAL.toHours(),
       TimeUnit.HOURS
     )
+      .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
       .setConstraints(
         Constraints.Builder()
           .setRequiredNetworkType(NetworkType.CONNECTED)
