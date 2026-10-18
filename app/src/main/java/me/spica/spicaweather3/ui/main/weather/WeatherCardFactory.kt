@@ -91,6 +91,7 @@ object WeatherCardFactory {
       )
       
       WeatherCardType.SUNRISE -> SunriseCard(
+        modifier = modifier,
         weatherEntity = weatherData,
         startAnim = startAnim
       )

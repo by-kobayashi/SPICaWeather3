@@ -66,8 +66,13 @@
   <string name="feel_temp_cold">寒冷</string>
   <string name="feel_temp_freezing">极寒</string>
   <string name="minutely_info_title">降雨量信息</string>
-  <string name="one_hour">1小时</string>
+  <string name="minutely_no_data">暂无分钟级降水数据</string>
+  <string name="minutely_now">现在</string>
+  <string name="minutely_one_hour_later">1小时后</string>
+  <string name="minutely_two_hours_later">2小时后</string>
+  <string name="minutely_chart_description">未来2小时降水趋势，柱形越高表示降水越强</string>
   <string name="rain_light">小雨</string>
+  <string name="rain_moderate">中雨</string>
   <string name="rain_heavy">大雨</string>
   <string name="humidity_info_title">湿度信息</string>
   <string name="humidity_tip_dry">干燥，注意静电和补水</string>
@@ -91,6 +96,11 @@
   <string name="sunrise_title">日出日落</string>
   <string name="sunrise_label">日出 %1$s</string>
   <string name="sunset_label">日落 %1$s</string>
+  <string name="sunrise_time_label">日出</string>
+  <string name="sunset_time_label">日落</string>
+  <string name="sunrise_daylight_duration">日照 %1$d时%2$d分</string>
+  <string name="sunrise_timeline_description">0至24时的昼夜时间带</string>
+  <string name="sunrise_timeline_current_time">0至24时的昼夜时间带，当前时间 %1$s</string>
   <string name="uv_info_title">紫外线信息</string>
   <string name="uv_level_low">低</string>
   <string name="uv_level_medium">中</string>

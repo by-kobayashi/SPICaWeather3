@@ -1,362 +1,409 @@
 package me.spica.spicaweather3.ui.main.cards
 
-import android.util.Log
-import androidx.compose.animation.core.Animatable
+import android.content.res.Configuration
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.PathMeasure
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import java.util.*
-import kotlin.math.PI
-import kotlin.math.sin
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
+import java.time.Duration
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.OffsetDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import me.spica.spicaweather3.R
 import me.spica.spicaweather3.domain.model.WeatherData
+import me.spica.spicaweather3.presentation.theme.SpicaWeatherTheme
+import me.spica.spicaweather3.presentation.theme.WIDGET_CARD_CORNER_SHAPE
+import me.spica.spicaweather3.presentation.theme.WIDGET_CARD_PADDING
 import me.spica.spicaweather3.presentation.theme.WIDGET_CARD_TITLE_TEXT_STYLE
+
+private val SolarTimeFormat = DateTimeFormatter.ofPattern("HH:mm")
 
 /**
  * 日出日落信息卡片
- * 可视化展示当天的日出日落时间，并通过弧线路径动画展示当前时间的太阳位置
- * 特点：
- * - 贝塞尔曲线绘制太阳轨迹
- * - 实时计算太阳当前位置
- * - 每分钟自动更新位置
- * - 流畅的路径动画和发光效果
- * - 智能判断日出前/日落后状态
+ * 并排显示日出、日落时间，通过昼夜时间带展示当前时刻和日照时长
  *
- * @param weatherEntity 天气数据，包含日出日落时间
- * @param startAnim 是否开始播放动画
+ * @param weatherEntity 天气数据，包含当日的日出、日落时间
+ * @param startAnim 是否开始播放入场动画
+ * @param modifier 修饰符
  */
 @Composable
-fun SunriseCard(weatherEntity: WeatherData, startAnim: Boolean) {
+fun SunriseCard(
+  weatherEntity: WeatherData,
+  startAnim: Boolean,
+  modifier: Modifier = Modifier,
+) {
+  val today = weatherEntity.forecast.today
+  val sunrise = remember(today.sunrise) { parseSolarTime(today.sunrise) }
+  val sunset = remember(today.sunset) { parseSolarTime(today.sunset) }
+  val forecastDate = remember(today.date) {
+    try {
+      LocalDate.parse(today.date)
+    } catch (_: DateTimeParseException) {
+      null
+    }
+  }
+  // 优先使用观测时间中的城市时区偏移，解析失败时依次回退到生成时间和设备时区
+  val zone = remember(weatherEntity.current.obsTime, weatherEntity.generatedAt) {
+    sequenceOf(weatherEntity.current.obsTime, weatherEntity.generatedAt)
+      .mapNotNull { timestamp ->
+        try {
+          OffsetDateTime.parse(timestamp).offset
+        } catch (_: DateTimeParseException) {
+          null
+        }
+      }
+      .firstOrNull() ?: ZoneId.systemDefault()
+  }
+  val now by currentSolarTime(zone)
 
+  SunriseCardContent(
+    sunrise = sunrise,
+    sunset = sunset,
+    // 仅为城市当地当天的预报显示当前时刻，避免缓存数据产生误导
+    currentTime = now.toLocalTime().takeIf { forecastDate == now.toLocalDate() },
+    startAnim = startAnim,
+    modifier = modifier,
+  )
+}
+
+/**
+ * 随界面生命周期按整分钟更新城市当地时间，进入后台后暂停更新
+ */
+@Composable
+private fun currentSolarTime(zone: ZoneId): State<LocalDateTime> {
+  val lifecycle = LocalLifecycleOwner.current.lifecycle
+  return produceState(LocalDateTime.now(zone), zone, lifecycle) {
+    lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+      while (isActive) {
+        value = LocalDateTime.now(zone).withSecond(0).withNano(0)
+        // 对齐下一整分钟，避免更新时刻随刷新次数逐渐偏移
+        delay(60_000L - System.currentTimeMillis() % 60_000L)
+      }
+    }
+  }
+}
+
+@Composable
+private fun SunriseCardContent(
+  sunrise: LocalTime?,
+  sunset: LocalTime?,
+  currentTime: LocalTime?,
+  startAnim: Boolean,
+  modifier: Modifier = Modifier,
+) {
   // ==================== 动画配置 ====================
-  // 图标缩放动画（230ms）
-  val textAnimValue1 = animateFloatAsState(
-    if (startAnim) 1f else 0f, animationSpec = tween(durationMillis = 230)
-  ).value
-
-  // 标题文字动画（延迟170ms，持续320ms）
-  val textAnimValue2 = animateFloatAsState(
-    if (startAnim) 1f else 0f, animationSpec = tween(durationMillis = 320, 170)
-  ).value
-
-  // 备用动画值（延迟370ms，持续520ms）
-  val textAnimValue3 = animateFloatAsState(
-    if (startAnim) 1f else 0f, animationSpec = tween(durationMillis = 520, 370)
-  ).value
-
-  // ==================== 数据验证 ====================
-  // 如果没有天气数据，显示空状态
-  if (weatherEntity.forecast.next7Days.isEmpty()) {
-
-    Box(
-      modifier = Modifier
-        .fillMaxWidth()
-        .height(140.dp)
-    ) {
-      Text(
-        stringResource(R.string.sunrise_no_data),
-        modifier = Modifier.align(Alignment.Center),
-        style = MaterialTheme.typography.headlineMedium,
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = .9f)
-      )
-    }
-
-    return
-  }
-
-  // ==================== 时间计算 ====================
-  // 解析日出时间（HH:mm 格式）
-  val sunrise = remember(weatherEntity.forecast.today.sunrise) {
-    Date().apply {
-      hours = weatherEntity.forecast.today.sunrise.split(":")[0].toInt()
-      minutes = weatherEntity.forecast.today.sunrise.split(":")[1].toInt()
-    }
-  }
-
-  // 解析日落时间（HH:mm 格式）
-  val sunset = remember(weatherEntity.forecast.today.sunset) {
-    Date().apply {
-      hours = weatherEntity.forecast.today.sunset.split(":")[0].toInt()
-      minutes = weatherEntity.forecast.today.sunset.split(":")[1].toInt()
-    }
-  }
-
-  // 太阳当前位置进度（0.0=日出, 1.0=日落）
-  val progress = remember { Animatable(0f) }
-
-  // 实时更新太阳位置
-  LaunchedEffect(Unit) {
-    while (isActive) {
-      // 每分钟同步一次太阳位置
-      val currentDate = Date()
-      
-      // 判断当前时间在日出和日落之间
-      if (currentDate.after(sunrise) && currentDate.before(sunset)) {
-        // 计算进度：(当前时间 - 日出时间) / (日落时间 - 日出时间)
-        progress.animateTo(
-          ((currentDate.time - sunrise.time) * 1f / (sunset.time - sunrise.time)).coerceIn(0f, 1f),
-          animationSpec = tween(durationMillis = 850, delayMillis = 450)
-        )
-      } else
-        if (currentDate.before(sunrise)) {
-          // 日出前，太阳位置为 0
-          Log.e("SunriseCard", "还没日出")
-          progress.animateTo(0f)
-        } else
-          if (currentDate.after(sunset)) {
-            // 日落后，太阳位置为 1
-            Log.e("SunriseCard", "日落了")
-            progress.animateTo(1f)
-          }
-      // 等待1分钟后再次更新
-      delay(1000 * 60)
-    }
-  }
-
-
-  // 路径背景颜色
-  val pathBgColor = MaterialTheme.colorScheme.secondaryContainer
+  val entrance = animateFloatAsState(
+    targetValue = if (startAnim) 1f else 0f,
+    animationSpec = tween(durationMillis = 300),
+    label = "sunrise_content",
+  )
+  val hasDaylight = sunrise != null && sunset != null && sunset.isAfter(sunrise)
 
   // ==================== 主布局 ====================
   Column(
-    modifier = Modifier
+    modifier = modifier
       .fillMaxSize()
-      .padding(
-        horizontal = 16.dp,
-        vertical = 12.dp
-      ),
-    verticalArrangement = Arrangement.spacedBy(12.dp)
+      .padding(WIDGET_CARD_PADDING)
+      .graphicsLayer {
+        alpha = entrance.value
+        translationY = 4.dp.toPx() * (1f - entrance.value)
+      },
+    verticalArrangement = Arrangement.SpaceBetween,
   ) {
     // 标题行（图标 + 文字）
     Row(
       modifier = Modifier.fillMaxWidth(),
       horizontalArrangement = Arrangement.spacedBy(12.dp),
-      verticalAlignment = Alignment.CenterVertically
+      verticalAlignment = Alignment.CenterVertically,
     ) {
-      // 太阳图标（缩放渐显动画）
       Icon(
-        painter = painterResource(id = R.drawable.material_symbols_outlined_sunny),
+        painter = painterResource(R.drawable.material_symbols_outlined_sunny),
         contentDescription = null,
         tint = MaterialTheme.colorScheme.onSurface,
-        modifier = Modifier.graphicsLayer {
-          scaleX = textAnimValue1
-          scaleY = textAnimValue1
-          alpha = textAnimValue1
-        }
       )
-      // 标题文字（渐显和向上平移动画）
       Text(
         text = stringResource(R.string.sunrise_title),
-        color = MaterialTheme.colorScheme.onSurface, style = WIDGET_CARD_TITLE_TEXT_STYLE(),
-        modifier = Modifier.graphicsLayer {
-          alpha = textAnimValue2
-          translationY = -12.dp.toPx() * (1f - textAnimValue2)
-        }
+        style = WIDGET_CARD_TITLE_TEXT_STYLE(),
+        color = MaterialTheme.colorScheme.onSurface,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
       )
     }
 
-    // 太阳轨迹可视化区域
-    Box(
-      modifier = Modifier
-        .fillMaxWidth()
-        .weight(1f)
-        .drawWithCache {
-          // 路径测量工具，用于计算路径上的点
-          val pathMeasure = PathMeasure()
-          val progressValue = progress.value.coerceIn(0f, 1f)
-          val daylight = sin(progressValue * PI).toFloat().coerceAtLeast(0f)
-          val nightAlpha = 1f - daylight
-          val horizonY = size.height * 0.86f
-          val horizonCenter = Offset(size.width * 0.5f, horizonY)
-
-          // 创建太阳运动轨迹（使用三次贝塞尔曲线绘制弧线）
-          val sunMovePath = Path().apply {
-            moveTo(0f, horizonY) // 起点：左侧地平线
-            cubicTo(
-              .2f * size.width,  // 控制点1x: 左侧曲率
-              size.height * .0f,  // 控制点1y: 顶部高度
-              .8f * size.width,  // 控制点2x: 右侧曲率
-              size.height * .0f,  // 控制点2y: 顶部高度
-              size.width * 1f,   // 终点x: 右下角
-              horizonY           // 终点y: 右侧地平线
-            )
-          }
-
-          // 设置路径并计算当前进度的路径段
-          pathMeasure.setPath(sunMovePath, false)
-          val movePath = Path()
-          // 获取从起点到当前进度的路径段
-          pathMeasure.getSegment(0f, pathMeasure.length * progressValue, movePath, true)
-          val sunPosition = pathMeasure.getPosition(pathMeasure.length * progressValue)
-
-          onDrawWithContent {
-            drawCircle(
-              brush = Brush.radialGradient(
-                colors = listOf(
-                  Color(0xFFFFD666).copy(alpha = 0.10f + daylight * 0.14f),
-                  Color(0xFFFFA940).copy(alpha = 0.05f + daylight * 0.08f),
-                  Color.Transparent
-                ),
-                center = horizonCenter,
-                radius = size.width * 0.72f
-              ),
-              radius = size.width * 0.72f,
-              center = horizonCenter
-            )
-
-            drawLine(
-              brush = Brush.horizontalGradient(
-                colors = listOf(
-                  Color.Transparent,
-                  Color(0xFFFFD666).copy(alpha = 0.22f + daylight * 0.22f),
-                  Color.Transparent
-                )
-              ),
-              start = Offset(0f, horizonY),
-              end = Offset(size.width, horizonY),
-              strokeWidth = 2.dp.toPx(),
-              cap = StrokeCap.Round
-            )
-
-            drawCircle(
-              brush = Brush.radialGradient(
-                colors = listOf(
-                  Color(0xFFFFD666).copy(alpha = 0.16f + daylight * 0.20f),
-                  Color(0xFFFFA940).copy(alpha = 0.08f + daylight * 0.08f),
-                  Color.Transparent
-                ),
-                center = sunPosition,
-                radius = size.minDimension * (0.22f + daylight * 0.18f)
-              ),
-              radius = size.minDimension * (0.22f + daylight * 0.18f),
-              center = sunPosition
-            )
-
-            // 绘制背景轨迹线
-            drawPath(
-              path = sunMovePath,
-              color = pathBgColor.copy(alpha = 0.42f),
-              style = Stroke(
-                width = 8.dp.toPx(),
-                cap = StrokeCap.Round,
-              ),
-            )
-            drawPath(
-              path = sunMovePath,
-              color = Color.White.copy(alpha = 0.20f),
-              style = Stroke(
-                width = 2.dp.toPx(),
-                cap = StrokeCap.Round,
-              ),
-            )
-            // 绘制已经过的轨迹线（橙色半透明）
-            drawPath(
-              path = movePath,
-              color = Color(0x59FFA940),
-              style = Stroke(
-                width = 15.dp.toPx(),
-                cap = StrokeCap.Round,
-              )
-            )
-            drawPath(
-              path = movePath,
-              color = Color(0xC1FFA940),
-              style = Stroke(
-                width = 7.dp.toPx(),
-                cap = StrokeCap.Round,
-              )
-            )
-            // 如果还没日落，绘制太阳位置指示点
-            if (progressValue < 0.995f) {
-              drawCircle(
-                color = Color(0x40FFA940),
-                center = sunPosition,
-                radius = 22.dp.toPx()
-              )
-              drawCircle(
-                color = Color(0x66FFD666),
-                center = sunPosition,
-                radius = 15.dp.toPx()
-              )
-              drawCircle(
-                color = Color(0xffffa940),
-                center = sunPosition,
-                radius = 10.dp.toPx()
-              )
-              drawCircle(
-                color = Color.White.copy(alpha = 0.65f),
-                center = sunPosition - Offset(3.dp.toPx(), 3.dp.toPx()),
-                radius = 3.dp.toPx()
-              )
-            }
-          }
-        }
-        .clip(RectangleShape)
-    ) {
-
-    }
-
-
-    // 底部日出日落时间显示
-    Column (
+    // 左侧显示日出时间，右侧显示日落时间
+    Row(
       modifier = Modifier.fillMaxWidth(),
-      horizontalAlignment = Alignment.CenterHorizontally,
-      verticalArrangement = Arrangement.spacedBy(4.dp)
+      horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-      // 左侧：日出时间
-      Text(
-        text = stringResource(
-          R.string.sunrise_label,
-          weatherEntity.forecast.today.sunrise
-        ),
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurface,
-        fontWeight = FontWeight.Bold
+      SolarTimeReadout(
+        label = stringResource(R.string.sunrise_time_label),
+        time = sunrise,
+        description = stringResource(R.string.sunrise_label, sunrise?.format(SolarTimeFormat) ?: "—"),
+        modifier = Modifier.weight(1f),
       )
-      // 右侧：日落时间
-      Text(
-        text = stringResource(
-          R.string.sunset_label,
-          weatherEntity.forecast.today.sunset
-        ),
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurface,
-        fontWeight = FontWeight.Bold
+      SolarTimeReadout(
+        label = stringResource(R.string.sunset_time_label),
+        time = sunset,
+        description = stringResource(R.string.sunset_label, sunset?.format(SolarTimeFormat) ?: "—"),
+        modifier = Modifier.weight(1f),
+        alignment = Alignment.End,
       )
     }
 
+    // 有效的日出、日落时段用于绘制昼夜时间带并计算日照时长
+    if (hasDaylight) {
+      val daylightMinutes = Duration.between(sunrise, sunset).toMinutes()
+      Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(
+          modifier = Modifier.fillMaxWidth(),
+          horizontalArrangement = Arrangement.spacedBy(4.dp),
+          verticalAlignment = Alignment.CenterVertically,
+        ) {
+          Text(
+            text = "00",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.clearAndSetSemantics { },
+          )
+          DaylightTimeline(
+            sunrise = sunrise,
+            sunset = sunset,
+            currentTime = currentTime,
+            modifier = Modifier.weight(1f),
+          )
+          Text(
+            text = "24",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.clearAndSetSemantics { },
+          )
+        }
+        // 日照时长独占一行，较长文案随可用宽度缩放，避免大字体下被裁切
+        Text(
+          text = stringResource(
+            R.string.sunrise_daylight_duration,
+            daylightMinutes / 60,
+            daylightMinutes % 60,
+          ),
+          modifier = Modifier.fillMaxWidth(),
+          style = MaterialTheme.typography.labelSmall,
+          color = MaterialTheme.colorScheme.onSurfaceVariant,
+          textAlign = TextAlign.Center,
+          autoSize = TextAutoSize.StepBased(
+            minFontSize = MaterialTheme.typography.labelSmall.fontSize * 0.8f,
+            maxFontSize = MaterialTheme.typography.labelSmall.fontSize,
+          ),
+          maxLines = 1,
+          softWrap = false,
+        )
+      }
+    } else {
+      Text(
+        text = stringResource(R.string.sunrise_no_data),
+        style = MaterialTheme.typography.labelSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+      )
+    }
+  }
+}
+
+/**
+ * 日出或日落时间读数，合并标签与时间的无障碍描述
+ */
+@Composable
+private fun SolarTimeReadout(
+  label: String,
+  time: LocalTime?,
+  description: String,
+  modifier: Modifier = Modifier,
+  alignment: Alignment.Horizontal = Alignment.Start,
+) {
+  Column(
+    modifier = modifier.clearAndSetSemantics { contentDescription = description },
+    verticalArrangement = Arrangement.spacedBy(4.dp),
+    horizontalAlignment = alignment,
+  ) {
+    Text(
+      text = label,
+      style = MaterialTheme.typography.labelSmall,
+      color = MaterialTheme.colorScheme.onSurfaceVariant,
+      maxLines = 1,
+    )
+    Text(
+      text = time?.format(SolarTimeFormat) ?: "—",
+      style = MaterialTheme.typography.headlineMedium.copy(
+        fontWeight = FontWeight.SemiBold,
+        fontFeatureSettings = "tnum",
+      ),
+      color = MaterialTheme.colorScheme.onSurface,
+      autoSize = TextAutoSize.StepBased(
+        minFontSize = MaterialTheme.typography.titleSmall.fontSize,
+        maxFontSize = MaterialTheme.typography.headlineMedium.fontSize,
+      ),
+      maxLines = 1,
+      softWrap = false,
+    )
+  }
+}
+
+/**
+ * 将日出、日落与当前时刻映射到0至24时的昼夜时间带
+ */
+@Composable
+private fun DaylightTimeline(
+  sunrise: LocalTime,
+  sunset: LocalTime,
+  currentTime: LocalTime?,
+  modifier: Modifier = Modifier,
+) {
+  val dayColor = MaterialTheme.colorScheme.primary
+  val nightColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.15f)
+  val surfaceColor = MaterialTheme.colorScheme.surfaceContainer
+  val nightMarkerColor = MaterialTheme.colorScheme.onSurfaceVariant
+  val description = if (currentTime == null) {
+    stringResource(R.string.sunrise_timeline_description)
+  } else {
+    stringResource(R.string.sunrise_timeline_current_time, currentTime.format(SolarTimeFormat))
   }
 
+  Canvas(
+    modifier = modifier
+      .fillMaxWidth()
+      .height(16.dp)
+      .semantics { contentDescription = description },
+  ) {
+    // 两端预留指示点半径，避免午夜附近的圆点被裁切
+    val inset = 6.dp.toPx()
+    val trackWidth = (size.width - inset * 2).coerceAtLeast(0f)
+    val trackHeight = 6.dp.toPx()
+    val top = center.y - trackHeight / 2f
+    val radius = CornerRadius(trackHeight / 2f)
+    val sunriseX = inset + trackWidth * sunrise.toSecondOfDay() / 86_400f
+    val sunsetX = inset + trackWidth * sunset.toSecondOfDay() / 86_400f
+
+    drawRoundRect(
+      color = nightColor,
+      topLeft = Offset(inset, top),
+      size = Size(trackWidth, trackHeight),
+      cornerRadius = radius,
+    )
+    drawRoundRect(
+      color = dayColor,
+      topLeft = Offset(sunriseX, top),
+      size = Size(sunsetX - sunriseX, trackHeight),
+      cornerRadius = radius,
+    )
+    if (currentTime != null) {
+      val marker = Offset(inset + trackWidth * currentTime.toSecondOfDay() / 86_400f, center.y)
+      val isDaytime = !currentTime.isBefore(sunrise) && currentTime.isBefore(sunset)
+      drawCircle(color = surfaceColor, radius = 6.dp.toPx(), center = marker)
+      drawCircle(
+        color = if (isDaytime) dayColor else nightMarkerColor,
+        radius = 4.dp.toPx(),
+        center = marker,
+      )
+    }
+  }
+}
+
+private fun parseSolarTime(value: String): LocalTime? = try {
+  LocalTime.parse(value.trim())
+} catch (_: DateTimeParseException) {
+  null
+}
+
+@Preview(name = "浅色主题", widthDp = 360)
+@Preview(name = "深色主题", widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(name = "大字体", widthDp = 360, fontScale = 1.5f)
+@Composable
+private fun SunriseCardPreview() {
+  SpicaWeatherTheme {
+    Column(
+      modifier = Modifier
+        .background(MaterialTheme.colorScheme.background)
+        .padding(12.dp),
+      verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+      Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        SunrisePreviewTile(LocalTime.of(11, 30), Modifier.weight(1f))
+        Surface(
+          modifier = Modifier.weight(1f).aspectRatio(1f),
+          color = MaterialTheme.colorScheme.surfaceContainer,
+          shape = WIDGET_CARD_CORNER_SHAPE,
+        ) {
+          PrecipitationCard(precipitation = 3, pop = 80)
+        }
+      }
+      Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        SunrisePreviewTile(LocalTime.of(5, 0), Modifier.weight(1f))
+        SunrisePreviewTile(LocalTime.of(21, 0), Modifier.weight(1f))
+      }
+      Surface(
+        modifier = Modifier.fillMaxWidth().height(150.dp),
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        shape = WIDGET_CARD_CORNER_SHAPE,
+      ) {
+        SunriseCardContent(null, null, null, startAnim = true)
+      }
+    }
+  }
+}
+
+@Composable
+private fun SunrisePreviewTile(currentTime: LocalTime, modifier: Modifier = Modifier) {
+  Surface(
+    modifier = modifier.aspectRatio(1f),
+    color = MaterialTheme.colorScheme.surfaceContainer,
+    shape = WIDGET_CARD_CORNER_SHAPE,
+  ) {
+    SunriseCardContent(
+      sunrise = LocalTime.of(6, 18),
+      sunset = LocalTime.of(17, 42),
+      currentTime = currentTime,
+      startAnim = true,
+    )
+  }
 }

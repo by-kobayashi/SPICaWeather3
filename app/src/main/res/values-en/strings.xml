@@ -66,8 +66,13 @@
   <string name="feel_temp_cold">Cold</string>
   <string name="feel_temp_freezing">Freezing</string>
   <string name="minutely_info_title">Precipitation trend</string>
-  <string name="one_hour">1 hour</string>
+  <string name="minutely_no_data">Minute-by-minute precipitation data unavailable</string>
+  <string name="minutely_now">Now</string>
+  <string name="minutely_one_hour_later">In 1 hour</string>
+  <string name="minutely_two_hours_later">In 2 hours</string>
+  <string name="minutely_chart_description">Precipitation over the next 2 hours. Taller bars indicate heavier precipitation.</string>
   <string name="rain_light">Light</string>
+  <string name="rain_moderate">Moderate</string>
   <string name="rain_heavy">Heavy</string>
   <string name="humidity_info_title">Humidity</string>
   <string name="humidity_tip_dry">Dry, watch for static and stay hydrated</string>
@@ -91,6 +96,11 @@
   <string name="sunrise_title">Sunrise &amp; sunset</string>
   <string name="sunrise_label">Sunrise %1$s</string>
   <string name="sunset_label">Sunset %1$s</string>
+  <string name="sunrise_time_label">Sunrise</string>
+  <string name="sunset_time_label">Sunset</string>
+  <string name="sunrise_daylight_duration">Daylight %1$dh %2$dm</string>
+  <string name="sunrise_timeline_description">Day and night timeline from 00:00 to 24:00</string>
+  <string name="sunrise_timeline_current_time">Day and night timeline from 00:00 to 24:00. Current time %1$s</string>
   <string name="uv_info_title">UV index</string>
   <string name="uv_level_low">Low</string>
   <string name="uv_level_medium">Moderate</string>
