@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -192,22 +191,21 @@ fun UVCard(uv: Int, startAnim: Boolean) {
       verticalAlignment = Alignment.Bottom,
       horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-      Row {
-        Text(
-          modifier = Modifier
-            .alignByBaseline()
-            .graphicsLayer {
-              alpha = textAnimValue3
-              translationY = -12.dp.toPx() * (1f - textAnimValue3)
-            },
-          text = uvExtraDesc, color = MaterialTheme.colorScheme.onSurface,
-          style = WIDGET_CARD_TITLE_TEXT_STYLE().copy(
-            fontWeight = FontWeight.W500, fontSize = 14.sp,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = .6f)
-          )
+      Text(
+        modifier = Modifier
+          .weight(1f)
+          .graphicsLayer {
+            alpha = textAnimValue3
+            translationY = -12.dp.toPx() * (1f - textAnimValue3)
+          },
+        text = uvExtraDesc,
+        color = MaterialTheme.colorScheme.onSurface,
+        style = WIDGET_CARD_TITLE_TEXT_STYLE().copy(
+          fontWeight = FontWeight.W500,
+          fontSize = 14.sp,
+          color = MaterialTheme.colorScheme.onSurface.copy(alpha = .6f)
         )
-      }
-      Spacer(modifier = Modifier.weight(1f))
+      )
       Icon(
         modifier = Modifier.size(30.dp),
         painter = painterResource(R.drawable.material_symbols_outlined_sports_tennis),

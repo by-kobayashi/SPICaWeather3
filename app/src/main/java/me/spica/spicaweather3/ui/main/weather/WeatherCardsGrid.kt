@@ -8,13 +8,10 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
+import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarScrollBehavior
@@ -22,17 +19,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.unit.dp
 import kotlin.random.Random
 import me.spica.spicaweather3.common.model.WeatherCardConfig
 import me.spica.spicaweather3.domain.model.WeatherData
 import sh.calvin.reorderable.ReorderableItem
-import sh.calvin.reorderable.rememberReorderableLazyGridState
+import sh.calvin.reorderable.rememberReorderableLazyStaggeredGridState
 
 /**
  * 天气卡片网格
@@ -62,6 +59,11 @@ fun WeatherCardsGrid(
     var displayCards by remember(cards) {
         mutableStateOf(cards)
     }
+    // 拖拽手势可跨越列表更新，结束回调始终读取最新的列表状态。
+    val finishDrag = rememberUpdatedState {
+        isDragging = false
+        onReorder(displayCards)
+    }
 
     // iOS 风格的抖动动画 - 当有任何 item 被拖拽且当前 item 未被拖拽时启用
     val infiniteTransition = rememberInfiniteTransition(label = "shake")
@@ -75,35 +77,38 @@ fun WeatherCardsGrid(
         label = "shake_offset"
     )
 
-    val listState = rememberLazyGridState()
+    val listState = rememberLazyStaggeredGridState()
     val hapticFeedback = LocalHapticFeedback.current
 
     // 拖拽排序状态
-    val reorderableState = rememberReorderableLazyGridState(listState) { from, to ->
+    val reorderableState = rememberReorderableLazyStaggeredGridState(listState) { from, to ->
+        val fromIndex = displayCards.indexOfFirst { it.cardType.key == from.key }
+        val toIndex = displayCards.indexOfFirst { it.cardType.key == to.key }
+        if (fromIndex < 0 || toIndex < 0 || fromIndex == toIndex) {
+            return@rememberReorderableLazyStaggeredGridState
+        }
         // 实时更新显示列表
         val mutableList = displayCards.toMutableList()
-        val item = mutableList.removeAt(from.index)
-        mutableList.add(to.index, item)
+        val item = mutableList.removeAt(fromIndex)
+        mutableList.add(toIndex, item)
         displayCards = mutableList
 
         // 触发触觉反馈
         hapticFeedback.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
     }
 
-    LazyVerticalGrid(
+    AdaptiveWeatherCardsGrid(
         modifier = modifier
             .fillMaxSize()
             .nestedScroll(scrollBehavior.nestedScrollConnection),
-        columns = GridCells.Fixed(2),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
         state = listState,
-        contentPadding = paddingValues
-    ) {
+        contentPadding = paddingValues,
+    ) { layout ->
         displayCards.forEach { cardConfig ->
             item(
                 key = cardConfig.cardType.key,
-                span = { GridItemSpan(cardConfig.cardType.spanSize) }
+                contentType = cardConfig.cardType,
+                span = layout.span(cardConfig.cardType),
             ) {
                 // 优化延迟和持续时间，创造更流畅的波浪式入场效果
                 val delayMillis = remember(cardConfig.cardType.key) { Random.nextInt(0, 280) }
@@ -119,21 +124,19 @@ fun WeatherCardsGrid(
                         cardConfig = cardConfig,
                         cityId = cityId,
                         weatherData = weatherData,
+                        aspectRatio = layout.aspectRatio(cardConfig.cardType),
                         delayMillis = delayMillis,
                         durationMillis = durationMillis,
                         shakeOffset = if (shouldShake) shakeOffset else 0f,
                         onDragStart = { isDragging = true },
-                        onDragStop = {
-                            isDragging = false
-                            // 拖拽结束后，通知外部更新真实数据
-                            onReorder(displayCards)
-                        }
+                        onDragStop = { finishDrag.value() },
                     )
                 }
             }
         }
         item(
-            span = { GridItemSpan(maxLineSpan) }
+            key = "weather_attribution",
+            span = StaggeredGridItemSpan.FullLine,
         ) {
             Text(
                 "感谢和风天气提供数据支持",

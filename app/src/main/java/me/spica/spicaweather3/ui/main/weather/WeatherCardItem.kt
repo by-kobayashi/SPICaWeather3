@@ -33,7 +33,8 @@ fun ReorderableCollectionItemScope.WeatherCardItem(
   durationMillis: Int,
   shakeOffset: Float,
   onDragStart: (startedPosition: Offset) -> Unit = {},
-  onDragStop: () -> Unit
+  onDragStop: () -> Unit,
+  aspectRatio: Float = if (cardConfig.cardType.spanSize == 2) 0f else 1f,
 ) {
   CardContainer(
     animationSpec = tween(
@@ -53,7 +54,7 @@ fun ReorderableCollectionItemScope.WeatherCardItem(
         onDragStarted = onDragStart,
         onDragStopped = onDragStop
       ),
-    ratio = if (cardConfig.cardType.spanSize == 2) 0f else 1f,
+    ratio = aspectRatio,
     content = { isAnimEnd ->
       WeatherCardFactory.CreateCard(
         cardType = cardConfig.cardType,

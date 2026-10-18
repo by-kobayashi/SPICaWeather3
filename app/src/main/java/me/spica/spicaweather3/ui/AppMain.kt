@@ -10,6 +10,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.adaptive.WindowAdaptiveInfo
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -17,6 +19,7 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.entryProvider
@@ -30,7 +33,6 @@ import me.spica.spicaweather3.route.Routes
 import me.spica.spicaweather3.ui.air_quality.AirQualityScreen
 import me.spica.spicaweather3.ui.alert.WeatherAlertScreen
 import me.spica.spicaweather3.ui.city_selector.CitySelectorScreen
-import me.spica.spicaweather3.ui.landscape.LandscapeMainScreen
 import me.spica.spicaweather3.ui.main.MainScreen
 import me.spica.spicaweather3.ui.main.WeatherViewModel
 import me.spica.spicaweather3.ui.weather_list.WeatherListScreen
@@ -42,7 +44,6 @@ import me.spica.spicaweather3.ui.widget.materialSharedAxisZIn
 import me.spica.spicaweather3.ui.widget.materialSharedAxisZOut
 import me.spica.spicaweather3.utils.DataStoreUtil
 import me.spica.spicaweather3.utils.LocationHelper
-import me.spica.spicaweather3.utils.isLandscape
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinActivityViewModel
 
@@ -77,8 +78,8 @@ fun AppMain() {
 
     val weatherViewModel = koinActivityViewModel<WeatherViewModel>()
 
-    // 缓存屏幕方向状态，减少重组
-    val isLandscapeMode = isLandscape()
+    val windowAdaptiveInfo = currentWindowAdaptiveInfoV2()
+    val windowSize = LocalWindowInfo.current.containerSize
 
     LaunchedEffect(locationPermissionState.allPermissionsGranted) {
         if (locationPermissionState.allPermissionsGranted) {
@@ -100,30 +101,23 @@ fun AppMain() {
     val dropdownMenuController = LocalDropdownMenuController.current
 
     SpicaWeatherTheme {
-        // 使用已缓存的屏幕方向状态
-        LaunchedEffect(isLandscapeMode) {
+        LaunchedEffect(windowSize, windowAdaptiveInfo.windowPosture) {
             menuState.dismiss()
             dropdownMenuController.dismiss()
         }
 
-        if (isLandscapeMode) {
-            // 横屏模式 - 双栏布局
-            LandscapeMainScreen()
-        } else {
-            // 竖屏模式 - 原有导航布局
-            PortraitMainScreen()
-        }
+        AppNavigation(windowAdaptiveInfo)
     }
 
 }
 
 /**
- * 竖屏主界面布局
+ * 所有窗口尺寸共用同一导航栈，布局变化由各页面的自适应容器处理。
  * 包含导航、底部菜单、下拉菜单等
  */
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-private fun PortraitMainScreen() {
+private fun AppNavigation(windowAdaptiveInfo: WindowAdaptiveInfo) {
 
     val backStack = rememberNavBackStack(Routes.Main)
 
@@ -161,7 +155,7 @@ private fun PortraitMainScreen() {
                     },
                     entryProvider = entryProvider {
                         entry<Routes.Main> {
-                            MainScreen()
+                            MainScreen(windowAdaptiveInfo = windowAdaptiveInfo)
                         }
                         entry<Routes.CitySelect> {
                             CitySelectorScreen()

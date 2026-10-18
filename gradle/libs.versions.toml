@@ -2,7 +2,6 @@
 accompanistSystemuicontroller = "0.36.0"
 accompanistVersion = "0.37.3"
 agp = "9.4.1"
-androidautosize = "v1.2.1"
 baidumapsdk_location = "9.6.7"
 converterMoshi = "3.0.0"
 glance = "1.2.0"
@@ -41,7 +40,6 @@ workManager = "2.12.0"
 kotlin-bom = { module = "org.jetbrains.kotlin:kotlin-bom", version.ref = "kotlin" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinxCoroutines" }
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistVersion" }
-androidautosize = { module = "com.github.JessYanCoding:AndroidAutoSize", version.ref = "androidautosize" }
 androidx-glance = { module = "androidx.glance:glance", version.ref = "glance" }
 androidx-glance-appwidget = { module = "androidx.glance:glance-appwidget", version.ref = "glance" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomVersion" }

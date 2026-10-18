@@ -12,6 +12,8 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -29,6 +31,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.material3.adaptive.WindowAdaptiveInfo
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
@@ -37,10 +40,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,6 +57,7 @@ import dev.chrisbanes.haze.glass.GlassStyle
 import dev.chrisbanes.haze.glass.hazeGlass
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
+import kotlinx.coroutines.launch
 import me.spica.spicaweather3.R
 import me.spica.spicaweather3.common.type.WeatherAnimType
 import me.spica.spicaweather3.core.constants.MainScreenConstants
@@ -59,6 +65,8 @@ import me.spica.spicaweather3.presentation.theme.MAIN_PLUS_BUTTON_SIZE
 import me.spica.spicaweather3.route.LocalNavController
 import me.spica.spicaweather3.route.Routes
 import me.spica.spicaweather3.ui.LocalSharedTransitionScope
+import me.spica.spicaweather3.ui.adaptive.AdaptiveWeatherLayout
+import me.spica.spicaweather3.ui.adaptive.CityListPane
 import me.spica.spicaweather3.ui.main.weather.WeatherPage
 import me.spica.spicaweather3.ui.main.weather.WeatherPageState
 import me.spica.spicaweather3.ui.widget.MainTopBar
@@ -76,7 +84,10 @@ import org.koin.compose.viewmodel.koinActivityViewModel
  */
 @OptIn(ExperimentalSharedTransitionApi::class, ExperimentalHazeApi::class)
 @Composable
-fun MainScreen() {
+fun MainScreen(
+    windowAdaptiveInfo: WindowAdaptiveInfo,
+    modifier: Modifier = Modifier,
+) {
     // ==================== 状态管理 ====================
     // 底部弹窗显示状态
     val showBottomSheet = rememberSaveable { mutableStateOf(false) }
@@ -90,15 +101,12 @@ fun MainScreen() {
 
     // ==================== Pager 状态管理 ====================
     // 横向分页器状态，页数等于城市数量
-    val pagerState = rememberPagerState {
+    val initialCityIndex = viewModel.initIndex.collectAsStateWithLifecycle()
+    // 只提供初始位置，窗口变化和返回页面时由 PagerState 恢复当前城市。
+    val pagerState = rememberPagerState(initialPage = initialCityIndex.value) {
         weatherPageStates.value.size
     }
-
-    // 监听初始索引变化，用于从其他页面返回时定位
-    val initIndex = viewModel.initIndex.collectAsStateWithLifecycle()
-    LaunchedEffect(initIndex.value) {
-        pagerState.requestScrollToPage(initIndex.value)
-    }
+    val coroutineScope = rememberCoroutineScope()
 
     // ==================== 派生状态 ====================
     // 当前页面的天气数据
@@ -146,7 +154,21 @@ fun MainScreen() {
     val pullToRefreshState = rememberPullToRefreshState()
 
     // ==================== UI 布局 ====================
-    with(LocalSharedTransitionScope.current) {
+    AdaptiveWeatherLayout(
+        modifier = modifier,
+        windowAdaptiveInfo = windowAdaptiveInfo,
+        listPane = {
+            CityListPane(
+                cities = weatherPageStates.value,
+                selectedIndex = pagerState.currentPage,
+                onCitySelected = { index ->
+                    coroutineScope.launch { pagerState.scrollToPage(index) }
+                },
+                onManageCities = { navigator.add(Routes.WeatherList) },
+                modifier = Modifier.fillMaxSize(),
+            )
+        },
+    ) {
         Scaffold(
             containerColor = MaterialTheme.colorScheme.surface,
             modifier = Modifier
@@ -310,9 +332,11 @@ private fun WeatherPager(
     scrollBehavior: TopAppBarScrollBehavior,
     paddingValues: PaddingValues
 ) {
+    val layoutDirection = LocalLayoutDirection.current
     HorizontalPager(
         state = pagerState,
         modifier = Modifier.fillMaxSize(),
+        key = { weatherPageStates.getOrNull(it)?.city?.id?:-1 },
         beyondViewportPageCount = MainScreenConstants.PAGER_BEYOND_VIEWPORT_PAGE_COUNT,
         pageContent = { currentIndex ->
             // 仅在目标页面时显示内容，优化性能
@@ -325,8 +349,8 @@ private fun WeatherPager(
                             .fillMaxSize(),
                         paddingValues = PaddingValues(
                             top = paddingValues.calculateTopPadding(),
-                            start = 15.dp,
-                            end = 15.dp,
+                            start = paddingValues.calculateStartPadding(layoutDirection) + 15.dp,
+                            end = paddingValues.calculateEndPadding(layoutDirection) + 15.dp,
                             bottom = paddingValues.calculateBottomPadding()
                         )
                     )

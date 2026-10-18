@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -154,7 +153,6 @@ fun SunriseCard(weatherEntity: WeatherData, startAnim: Boolean) {
   Column(
     modifier = Modifier
       .fillMaxSize()
-      .aspectRatio(1f)
       .padding(
         horizontal = 16.dp,
         vertical = 12.dp

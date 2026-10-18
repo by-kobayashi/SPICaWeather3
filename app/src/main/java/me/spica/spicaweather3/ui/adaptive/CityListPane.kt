@@ -1,36 +1,44 @@
-package me.spica.spicaweather3.ui.landscape
+package me.spica.spicaweather3.ui.adaptive
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import me.spica.spicaweather3.R
 import me.spica.spicaweather3.ui.main.weather.WeatherPageState
 
 /**
@@ -41,28 +49,37 @@ fun CityListPane(
   cities: List<WeatherPageState>,
   selectedIndex: Int,
   onCitySelected: (Int) -> Unit,
+  onManageCities: () -> Unit,
   modifier: Modifier = Modifier
 ) {
   Column(
     modifier = modifier
       .background(MaterialTheme.colorScheme.surfaceContainer)
-      .statusBarsPadding()
-      .navigationBarsPadding()
-    ,
+      .windowInsetsPadding(
+        WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical + WindowInsetsSides.Start)
+      ),
     verticalArrangement = Arrangement.spacedBy(12.dp),
   ) {
     // 标题栏
-    Box(
+    Row(
       modifier = Modifier
         .fillMaxWidth()
         .padding(horizontal = 16.dp),
+      verticalAlignment = Alignment.CenterVertically,
+      horizontalArrangement = Arrangement.SpaceBetween,
     ) {
       Text(
-        text = "城市列表",
+        text = stringResource(R.string.weather_list_title),
         fontSize = 20.sp,
         fontWeight = FontWeight.Bold,
         color = MaterialTheme.colorScheme.onSurface
       )
+      IconButton(onClick = onManageCities) {
+        Icon(
+          imageVector = Icons.Default.Add,
+          contentDescription = stringResource(R.string.cd_add_city),
+        )
+      }
     }
 
     // 城市列表
@@ -117,7 +134,7 @@ private fun CityListItem(
       .padding(horizontal = 8.dp)
       .clip(RoundedCornerShape(12.dp))
       .background(backgroundColor)
-      .clickable(onClick = onClick)
+      .selectable(selected = isSelected, role = Role.Tab, onClick = onClick)
       .padding(horizontal = 12.dp, vertical = 14.dp),
     verticalAlignment = Alignment.CenterVertically
   ) {
@@ -132,7 +149,7 @@ private fun CityListItem(
       ) {
         Icon(
           imageVector = Icons.Default.LocationOn,
-          contentDescription = "定位",
+          contentDescription = stringResource(R.string.cd_user_location),
           tint = MaterialTheme.colorScheme.primary,
           modifier = Modifier.size(18.dp)
         )

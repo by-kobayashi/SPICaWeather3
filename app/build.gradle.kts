@@ -29,6 +29,7 @@ android {
         ndk {
             //armeabi armeabi-v7a arm64-v8a x86 x86_64
             abiFilters.add("arm64-v8a")
+            abiFilters.add("x86_64")
         }
 
         // 从 local.properties 读取 API 配置
@@ -163,7 +164,6 @@ dependencies {
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.ktx)
     implementation(libs.reorderable)
-    implementation(libs.androidautosize)
     implementation(libs.baidumapsdk.location)
     implementation(libs.accompanist.permissions)
     implementation(libs.androidx.glance)
