@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.conflate
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -51,13 +52,17 @@ class WeatherViewModel(
     .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
 
-  val cardsConfig: StateFlow<List<WeatherCardConfig>> =
+  // null 表示配置尚未加载，避免 UI 把加载阶段当作真实的空列表。
+  val cardsConfig: StateFlow<List<WeatherCardConfig>?> =
     dataStoreUtil.getWeatherCardsConfig().conflate()
-      .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+      .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
   private val _isRefreshing = MutableStateFlow(false)
 
+  @OptIn(FlowPreview::class)
   val isRefreshing: StateFlow<Boolean> = _isRefreshing
+    .debounce(500)
+    .stateIn(viewModelScope,SharingStarted.Eagerly, false)
 
   private val _error = MutableStateFlow<String?>(null)
 

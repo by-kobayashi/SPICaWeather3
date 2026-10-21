@@ -32,7 +32,7 @@ import me.spica.spicaweather3.presentation.theme.COLOR_WHITE_100
 import me.spica.spicaweather3.presentation.theme.WIDGET_CARD_CORNER_SHAPE
 import me.spica.spicaweather3.ui.main.WeatherViewModel
 import me.spica.spicaweather3.ui.widget.AnimateOnEnter
-import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinActivityViewModel
 
 
 /**
@@ -89,13 +89,17 @@ private fun DataPage(
   scrollBehavior: TopAppBarScrollBehavior,
   paddingValues: PaddingValues
 ) {
-  val viewModel = koinInject<WeatherViewModel>()
+  val viewModel = koinActivityViewModel<WeatherViewModel>()
   
   // 获取天气数据（已保证非空）
   val weatherData = city.weather!!
   
   // 获取所有卡片配置
   val allCardsConfigs = viewModel.cardsConfig.collectAsStateWithLifecycle().value
+  if (allCardsConfigs == null) {
+    Box(modifier = Modifier.fillMaxSize())
+    return
+  }
 
   // 计算当前天气动画类型
   val currentAnimType = remember(weatherData) {
